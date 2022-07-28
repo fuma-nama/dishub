@@ -4,9 +4,33 @@
 package models.tables.references
 
 
+import models.tables.Guild
+import models.tables.Request
+import models.tables.RequestInfo
+import models.tables.Subscription
 import models.tables.Todo
 
 
+
+/**
+ * The table <code>public.guild</code>.
+ */
+val GUILD: Guild = Guild.GUILD
+
+/**
+ * The table <code>public.request</code>.
+ */
+val REQUEST: Request = Request.REQUEST
+
+/**
+ * The table <code>public.request_info</code>.
+ */
+val REQUEST_INFO: RequestInfo = RequestInfo.REQUEST_INFO
+
+/**
+ * The table <code>public.subscription</code>.
+ */
+val SUBSCRIPTION: Subscription = Subscription.SUBSCRIPTION
 
 /**
  * The table <code>public.todo</code>.

@@ -1,19 +1,19 @@
 import bjda.BJDA
 import bjda.plugins.supercommand.SuperCommandModule
 import bjda.plugins.ui.UIEventModule
-import commands.ExampleCommand
+import commands.request.RequestCommands
 import net.dv8tion.jda.api.JDABuilder
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
 import org.jooq.impl.DSL
-import commands.TodoCommands
+import commands.todo.TodoCommands
+import listeners.RequestEvents
 import token.TOKEN
 import java.net.URI
 import java.net.URISyntaxException
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
-
 
 val ctx: DSLContext = DSL.using(getConnection(), SQLDialect.POSTGRES)
 
@@ -22,11 +22,13 @@ fun main() {
         .build()
         .awaitReady()
 
+    jda.addEventListener(RequestEvents())
+
     BJDA.create(jda)
         .install(
             SuperCommandModule(
-                ExampleCommand(),
-                TodoCommands
+                TodoCommands,
+                RequestCommands
             ),
             UIEventModule(),
         )
@@ -49,5 +51,4 @@ private fun getConnection(): Connection? {
 
         DriverManager.getConnection("jdbc:postgresql://localhost:5432/kbot", username, password)
     }
-
 }

@@ -6,6 +6,10 @@ package models
 
 import kotlin.collections.List
 
+import models.tables.Guild
+import models.tables.Request
+import models.tables.RequestInfo
+import models.tables.Subscription
 import models.tables.Todo
 
 import org.jooq.Catalog
@@ -27,6 +31,26 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     }
 
     /**
+     * The table <code>public.guild</code>.
+     */
+    val GUILD: Guild get() = Guild.GUILD
+
+    /**
+     * The table <code>public.request</code>.
+     */
+    val REQUEST: Request get() = Request.REQUEST
+
+    /**
+     * The table <code>public.request_info</code>.
+     */
+    val REQUEST_INFO: RequestInfo get() = RequestInfo.REQUEST_INFO
+
+    /**
+     * The table <code>public.subscription</code>.
+     */
+    val SUBSCRIPTION: Subscription get() = Subscription.SUBSCRIPTION
+
+    /**
      * The table <code>public.todo</code>.
      */
     val TODO: Todo get() = Todo.TODO
@@ -34,6 +58,10 @@ open class Public : SchemaImpl("public", DefaultCatalog.DEFAULT_CATALOG) {
     override fun getCatalog(): Catalog = DefaultCatalog.DEFAULT_CATALOG
 
     override fun getTables(): List<Table<*>> = listOf(
+        Guild.GUILD,
+        Request.REQUEST,
+        RequestInfo.REQUEST_INFO,
+        Subscription.SUBSCRIPTION,
         Todo.TODO
     )
 }

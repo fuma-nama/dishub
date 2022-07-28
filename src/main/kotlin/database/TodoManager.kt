@@ -13,7 +13,15 @@ fun saveTodos(user: Long, todos: Array<String?>) {
         .executeAsync()
 }
 
-fun getTodos(user: Long, accept: (ArrayList<String>?) -> Unit) {
+fun getTodos(user: Long): ArrayList<String>? {
+    return ctx.selectFrom(todo)
+        .where(todo.USER.eq(user))
+        .fetchOne()?.content?.let {
+            arrayListOf(*it) as ArrayList<String>?
+        }
+}
+
+fun getTodosAsync(user: Long, accept: (ArrayList<String>?) -> Unit) {
     ctx.selectFrom(todo)
         .where(todo.USER.eq(user))
         .fetchOneAsync(accept) {
@@ -26,6 +34,12 @@ fun getTodos(user: Long, accept: (ArrayList<String>?) -> Unit) {
 fun<R : Record?, T> ResultQuery<R>.fetchAsync(accept: (T) -> Unit, mapper: (org.jooq.Result<R>) -> T) {
     this.fetchAsync().thenAccept {
         accept(mapper(it))
+    }
+}
+
+fun<T : Record?> ResultQuery<T>.fetchOneAsync(accept: (T) -> Unit) {
+    this.fetchAsync().thenAccept {
+        accept(it[0])
     }
 }
 

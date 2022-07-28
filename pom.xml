@@ -149,7 +149,12 @@
         <dependency>
             <groupId>io.github.sonmoosans</groupId>
             <artifactId>bjda</artifactId>
-            <version>4.1.0</version>
+            <version>4.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>club.minnced</groupId>
+            <artifactId>discord-webhooks</artifactId>
+            <version>0.8.2</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>

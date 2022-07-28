@@ -4,9 +4,18 @@
 package models.keys
 
 
+import models.tables.Guild
+import models.tables.Request
+import models.tables.RequestInfo
+import models.tables.Subscription
 import models.tables.Todo
+import models.tables.records.GuildRecord
+import models.tables.records.RequestInfoRecord
+import models.tables.records.RequestRecord
+import models.tables.records.SubscriptionRecord
 import models.tables.records.TodoRecord
 
+import org.jooq.ForeignKey
 import org.jooq.UniqueKey
 import org.jooq.impl.DSL
 import org.jooq.impl.Internal
@@ -17,4 +26,15 @@ import org.jooq.impl.Internal
 // UNIQUE and PRIMARY KEY definitions
 // -------------------------------------------------------------------------
 
+val KEY: UniqueKey<GuildRecord> = Internal.createUniqueKey(Guild.GUILD, DSL.name("key"), arrayOf(Guild.GUILD.ID), true)
+val REQUEST_PK: UniqueKey<RequestRecord> = Internal.createUniqueKey(Request.REQUEST, DSL.name("request_pk"), arrayOf(Request.REQUEST.ID, Request.REQUEST.GUILD), true)
+val TABLE_NAME_PKEY: UniqueKey<RequestInfoRecord> = Internal.createUniqueKey(RequestInfo.REQUEST_INFO, DSL.name("table_name_pkey"), arrayOf(RequestInfo.REQUEST_INFO.GUILD, RequestInfo.REQUEST_INFO.REQUEST), true)
+val SUBSCRIPTION_PK: UniqueKey<SubscriptionRecord> = Internal.createUniqueKey(Subscription.SUBSCRIPTION, DSL.name("subscription_pk"), arrayOf(Subscription.SUBSCRIPTION.USER, Subscription.SUBSCRIPTION.GUILD, Subscription.SUBSCRIPTION.REQUEST), true)
 val TODO_PKEY: UniqueKey<TodoRecord> = Internal.createUniqueKey(Todo.TODO, DSL.name("todo_pkey"), arrayOf(Todo.TODO.USER), true)
+
+// -------------------------------------------------------------------------
+// FOREIGN KEY definitions
+// -------------------------------------------------------------------------
+
+val REQUEST_INFO__REQUEST_HEADER_REQUEST_GUILD_ID_FK: ForeignKey<RequestInfoRecord, RequestRecord> = Internal.createForeignKey(RequestInfo.REQUEST_INFO, DSL.name("request_header_request_guild_id_fk"), arrayOf(RequestInfo.REQUEST_INFO.GUILD, RequestInfo.REQUEST_INFO.REQUEST), models.keys.REQUEST_PK, arrayOf(Request.REQUEST.GUILD, Request.REQUEST.ID), true)
+val SUBSCRIPTION__SUBSCRIPTION_GUILD_REQUEST_FKEY: ForeignKey<SubscriptionRecord, RequestRecord> = Internal.createForeignKey(Subscription.SUBSCRIPTION, DSL.name("subscription_guild_request_fkey"), arrayOf(Subscription.SUBSCRIPTION.GUILD, Subscription.SUBSCRIPTION.REQUEST), models.keys.REQUEST_PK, arrayOf(Request.REQUEST.GUILD, Request.REQUEST.ID), true)

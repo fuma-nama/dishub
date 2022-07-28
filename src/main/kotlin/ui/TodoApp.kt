@@ -1,4 +1,4 @@
-package commands
+package ui
 
 import bjda.plugins.ui.hook.ButtonClick.Companion.onClick
 import bjda.plugins.ui.hook.MenuSelect.Companion.onSelect
@@ -9,20 +9,22 @@ import bjda.ui.component.Text
 import bjda.ui.component.TextType
 import bjda.ui.component.action.Button
 import bjda.ui.component.action.Menu
+import bjda.ui.component.action.Menu.Companion.createOptions
 import bjda.ui.component.action.TextField
 import bjda.ui.core.Component
 import bjda.ui.core.IProps
 import bjda.ui.core.minus
 import bjda.ui.core.rangeTo
 import bjda.ui.types.Children
-import commands.context.Languages
+import bjda.utils.Translation
+import commands.todo.todoStore
 import database.saveTodos
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
-class TodoApp(initialTodos: ArrayList<String>?, val lang: Languages) : Component<TodoApp.Props>(Props()) {
+class TodoApp(initialTodos: ArrayList<String>?, val lang: Translation) : Component<TodoApp.Props>(Props()) {
     class Props : IProps() {
         lateinit var owner: User
     }
@@ -103,7 +105,7 @@ class TodoApp(initialTodos: ArrayList<String>?, val lang: Languages) : Component
             + RowLayout() -{
                 addIf (todos.isNotEmpty()) {
                     Menu(onSelectItem) {
-                        placeholder = lang["menu.placeholder"]
+                        placeholder = lang("menu")["placeholder"]
 
                         options = todos.mapIndexed {i, todo ->
                             SelectOption.of(todo, i.toString()).withDefault(i == selected)
@@ -172,9 +174,18 @@ class TodoApp(initialTodos: ArrayList<String>?, val lang: Languages) : Component
 
             + row {
                 + TextField("todo") {
-                    label = lang["form.new_content"]
+                    label = lang("form")["new_content"]
                     value = todos[selected!!]
                     style = TextInputStyle.PARAGRAPH
+                }
+            }
+            + row {
+                + Menu("test") {
+                    placeholder = "Select a Item"
+                    options = createOptions(
+                        selected = null,
+                        "Example" to "example"
+                    )
                 }
             }
         }
