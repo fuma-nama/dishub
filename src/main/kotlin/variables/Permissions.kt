@@ -2,6 +2,7 @@ package variables
 
 import net.dv8tion.jda.api.Permission
 
+const val NO_PERMISSIONS = 0L
 val USER_PERMISSIONS = Permission.getRaw(
     Permission.MESSAGE_ADD_REACTION,
     Permission.MESSAGE_SEND,
@@ -17,4 +18,5 @@ val ADMIN_PERMISSIONS = Permission.ALL_TEXT_PERMISSIONS
 
 val VIEW_PERMISSION = Permission.getRaw(
     Permission.VIEW_CHANNEL,
+    Permission.MESSAGE_HISTORY,
 )

@@ -1,4 +1,4 @@
-package ui
+package ui.modals
 
 import bjda.plugins.ui.modal.Form
 import bjda.ui.component.Embed
@@ -9,8 +9,8 @@ import bjda.ui.core.*
 import bjda.ui.types.ComponentTree
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
-import service.CreateRequestService
-import service.RequestOption
+import service.request.CreateRequestService
+import service.request.RequestOption
 import java.awt.Color
 
 val CreateRequestModal = Form {

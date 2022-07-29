@@ -11,6 +11,7 @@ import bjda.ui.core.rangeTo
 import listeners.Methods
 import models.tables.records.RequestInfoRecord
 import models.tables.records.RequestRecord
+import variables.States
 import java.awt.Color
 
 class RequestHeaderProps : IProps() {
@@ -21,9 +22,9 @@ class RequestHeaderProps : IProps() {
 val RequestHeader = component(::RequestHeaderProps) {
 
     with (props) {
-        val onModify = Methods.build(Methods.Modify, request.id!!)
-
-        val tags = arrayOf("Feature").joinToString();
+        val onModify = Methods.build(Methods.Actions, request.id!!)
+        val tags = arrayOf("Feature").joinToString()
+        val state = States.from(info.state!!);
 
         {
             + Content("**Request #${request.id}**")
@@ -34,7 +35,7 @@ val RequestHeader = component(::RequestHeaderProps) {
             }
             + Embed()..{
                 fields = fields(
-                    field("State" to info.state!!.name, true),
+                    field("State" to "${state.emoji.formatted} ${state.name}", true),
                     field("Requester" to "<@${request.owner}>", true),
                     field("Tags" to tags)
                 )
@@ -43,7 +44,7 @@ val RequestHeader = component(::RequestHeaderProps) {
 
             + Row()-{
                 + Button(onModify) {
-                    label = "Modify"
+                    label = "More"
                 }
             }
         }

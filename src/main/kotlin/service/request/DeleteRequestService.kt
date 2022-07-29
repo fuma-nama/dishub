@@ -1,4 +1,4 @@
-package service
+package service.request
 
 import database.deleteRequest
 import net.dv8tion.jda.api.entities.Guild

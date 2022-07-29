@@ -1,12 +1,16 @@
 package database
 
 import ctx
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.coroutineScope
+import models.enums.State
 import models.tables.records.RequestInfoRecord
 import models.tables.records.RequestRecord
 import models.tables.references.REQUEST
 import models.tables.references.REQUEST_INFO
 import models.tables.references.SUBSCRIPTION
 import java.util.function.Consumer
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * Insert a new request
@@ -20,6 +24,12 @@ fun addRequest(guild: Long, owner: Long, thread: Long, message: Long): RequestRe
             .values(guild, owner, thread, message)
             .returning()
             .fetchOne()
+    }
+}
+
+fun getRequest(guild: Long, id: Int): RequestRecord? {
+    with (REQUEST) {
+        return ctx.fetchOne(this, GUILD.eq(guild),ID.eq(id))
     }
 }
 
@@ -61,5 +71,33 @@ fun createInfo(guild: Long, request: Int, title: String, detail: String): Reques
             .values(guild, request, title, detail)
             .returning()
             .fetchOne()
+    }
+}
+
+suspend fun editRequest(guild: Long, id: Int, title: String, detail: String) = coroutineScope {
+    with (REQUEST_INFO) {
+        ctx.update(this)
+            .set(TITLE, title)
+            .set(DETAIL, detail)
+            .where(GUILD.eq(guild), REQUEST.eq(id))
+            .returning()
+            .fetchOne()
+    }
+}
+
+suspend fun setRequestState(guild: Long, request: Int, state: State) = coroutineScope {
+
+    with (REQUEST_INFO) {
+        ctx.update(this)
+            .set(STATE, state)
+            .where(GUILD.eq(guild), REQUEST.eq(request))
+            .returning()
+            .fetchOne()
+    }
+}
+
+fun fetchRequestInfo(guild: Long, request: Int): RequestInfoRecord? {
+    with (REQUEST_INFO) {
+        return ctx.fetchOne(this, GUILD.eq(guild), REQUEST.eq(request))
     }
 }

@@ -1,13 +1,18 @@
 package service
 
-import database.addGuildSettings
+import database.createGuildSettings
 import database.getGuildSettings
 import models.tables.records.GuildRecord
-import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Category
 import net.dv8tion.jda.api.entities.Guild
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class GuildSettingsService(val guild: Guild) {
+    suspend fun getOrInit() = suspendCoroutine { cont ->
+        getOrInit(cont::resume)
+    }
+
     fun getOrInit(success: (GuildRecord) -> Unit) {
         val settings = getGuildSettings(guild.idLong)
 
@@ -22,25 +27,17 @@ class GuildSettingsService(val guild: Guild) {
         guild.createCategory("Threads").queue(success)
     }
 
-    fun initSettings(success: (GuildRecord) -> Unit){
-        val adminRole = guild.roles.find {
-            it.hasPermission(Permission.ADMINISTRATOR)
-        }
+    fun initSettings(success: (GuildRecord) -> Unit) {
 
-        fun create(container: Long) {
-            val settings = addGuildSettings(
+        createContainer { container ->
+
+            val settings = createGuildSettings(
                 id = guild.idLong,
                 user = guild.publicRole.idLong,
-                admin = adminRole?.idLong,
-                manager = adminRole?.idLong,
-                container = container
+                container = container.idLong
             ) ?: error("Unable to create guild settings")
 
             success(settings)
-        }
-
-        createContainer {
-            create(it.idLong)
         }
     }
 }
