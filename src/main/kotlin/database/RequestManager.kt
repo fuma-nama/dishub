@@ -1,7 +1,6 @@
 package database
 
 import ctx
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import models.enums.State
 import models.tables.records.RequestInfoRecord
@@ -9,8 +8,8 @@ import models.tables.records.RequestRecord
 import models.tables.references.REQUEST
 import models.tables.references.REQUEST_INFO
 import models.tables.references.SUBSCRIPTION
+import org.jooq.Record2
 import java.util.function.Consumer
-import kotlin.coroutines.suspendCoroutine
 
 /**
  * Insert a new request
@@ -50,14 +49,13 @@ fun deleteRequest(guild: Long, request: Int, success: (RequestRecord) -> Unit) {
     }
 }
 
-fun addSubscriber(user: Long, guild: Long, request: Int, then: Consumer<Int>) {
+fun addSubscriber(user: Long, guild: Long, request: Int) {
     with (SUBSCRIPTION) {
 
         ctx.insertInto(this, USER, GUILD, REQUEST)
             .values(user, guild, request)
             .onDuplicateKeyIgnore()
-            .executeAsync()
-            .thenAccept(then)
+            .execute()
     }
 }
 
@@ -70,6 +68,17 @@ fun createInfo(guild: Long, request: Int, title: String, detail: String): Reques
         return ctx.insertInto(this, GUILD, REQUEST, TITLE, DETAIL)
             .values(guild, request, title, detail)
             .returning()
+            .fetchOne()
+    }
+}
+
+fun fetchRequestFull(guild: Long, request: Int): Record2<RequestRecord, RequestInfoRecord>? {
+
+    with (REQUEST) {
+        return ctx.select(this, REQUEST_INFO).from(this)
+            .join(REQUEST_INFO)
+            .on(REQUEST_INFO.GUILD.eq(GUILD), REQUEST_INFO.REQUEST.eq(ID))
+            .where(ID.eq(request), GUILD.eq(guild))
             .fetchOne()
     }
 }

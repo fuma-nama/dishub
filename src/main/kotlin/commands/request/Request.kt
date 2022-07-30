@@ -69,7 +69,7 @@ private class Delete : SuperCommand("delete", "Delete current request"), Corouti
                     ).queue()
                 }
             } else {
-                val embed = noPermissions("delete request", "Admin")
+                val embed = noPermissions("delete request")
 
                 hook.editOriginalEmbeds(embed).queue {
                     it.deleteLater()

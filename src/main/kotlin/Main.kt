@@ -2,6 +2,7 @@ import bjda.BJDA
 import bjda.plugins.supercommand.SuperCommandModule
 import bjda.plugins.ui.UIEventModule
 import commands.request.RequestCommands
+import commands.thread.ThreadCommands
 import net.dv8tion.jda.api.JDABuilder
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
@@ -28,7 +29,8 @@ fun main() {
         .install(
             SuperCommandModule(
                 TodoCommands,
-                RequestCommands
+                RequestCommands,
+                ThreadCommands
             ),
             UIEventModule(),
         )

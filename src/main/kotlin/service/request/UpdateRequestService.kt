@@ -6,14 +6,21 @@ import database.setRequestState
 import models.enums.State
 import models.tables.records.RequestInfoRecord
 import models.tables.records.RequestRecord
+import net.dv8tion.jda.api.Permission.ALL_PERMISSIONS
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.requests.RestAction
 import ui.RequestHeader
+import utils.allowRole
+import variables.NO_PERMISSIONS
+import variables.OPENING_PERMISSIONS
 
 class UpdateRequestService(val guild: Guild, var request: RequestRecord, var info: RequestInfoRecord) {
+    val thread by lazy {
+        guild.getTextChannelById(request.thread!!)?: error("Failed to find thread channel")
+    }
+
     fun updateHeader(): RestAction<*> {
         val service = this
-        val thread = guild.getTextChannelById(request.thread!!)?: error("Failed to find thread channel")
 
         val ui = UIOnce(RequestHeader {
             this.request = service.request
@@ -21,6 +28,23 @@ class UpdateRequestService(val guild: Guild, var request: RequestRecord, var inf
         })
 
         return thread.editMessageById(request.headerMessage!!, ui.get())
+    }
+
+    fun updatePermissions(): RestAction<*> {
+        val everyone = guild.publicRole.idLong
+
+        return when (info.state) {
+            State.opening, State.processing -> {
+                thread.manager.allowRole(
+                    everyone, OPENING_PERMISSIONS
+                )
+            }
+            else -> {
+                thread.manager.allowRole(
+                    everyone, NO_PERMISSIONS
+                )
+            }
+        }
     }
 
     suspend fun updateRequest(title: String, description: String): Boolean {

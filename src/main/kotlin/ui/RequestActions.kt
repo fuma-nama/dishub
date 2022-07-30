@@ -11,7 +11,7 @@ import bjda.ui.core.*
 import bjda.ui.types.Children
 import kotlinx.coroutines.*
 import models.tables.records.GuildRecord
-import variables.States as RequestState
+import variables.RequestState as RequestState
 import models.tables.records.RequestInfoRecord
 import models.tables.records.RequestRecord
 import net.dv8tion.jda.api.entities.Guild
@@ -19,7 +19,7 @@ import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import service.request.UpdateRequestService
-import ui.actions.StateChangePanel
+import ui.panel.StateChangePanel
 import ui.modals.EditRequestModal
 import utils.*
 import variables.eventThread
@@ -46,25 +46,42 @@ class RequestActions(val owner: Member, val guild: Guild) : Component<RequestAct
         }
     }
 
-    private val editModal = EditRequestModal { event ->
-        if (canEdit) launch {
+    private fun sync(): Pair<RequestInfoRecord, RequestInfoRecord> {
+        val old = props.info
+
+        props.request = service.request
+        props.info = service.info
+
+        return old to props.info
+    }
+
+    private val editModal = EditRequestModal event@ { event ->
+        if (!canEdit) {
+            return@event event.error(
+                noPermissions("edit request", "Author")
+            )
+        }
+
+        launch {
             val hook = event.deferReply().queueAsync()
             val success = service.updateRequest(
                 event.value("title"), event.value("detail")
             )
+            val (old, new) = sync()
 
             if (success) {
                 service.updateHeader().queueAsync()
+
 
                 val ui = UIOnce(
                     SuccessPanel(owner.user)..{
                         title = "Edited the Request"
                         fields = fields(
-                            field("Old Title" to props.info.title!!, true),
-                            field("New Title" to service.info.title!!, true),
+                            field("Old Title" to old.title!!, true),
+                            field("New Title" to new.title!!, true),
                             field("" to "", false),
-                            field("Old Detail" to props.info.detail!!, true),
-                            field("New Detail" to service.info.detail!!, true)
+                            field("Old Detail" to old.detail!!, true),
+                            field("New Detail" to new.detail!!, true)
                         )
                     }
                 )
@@ -73,10 +90,6 @@ class RequestActions(val owner: Member, val guild: Guild) : Component<RequestAct
             } else {
                 hook.error("Failed to edit request")
             }
-        } else {
-            event.error(
-                noPermissions("edit request")
-            )
         }
     }
 
@@ -92,7 +105,9 @@ class RequestActions(val owner: Member, val guild: Guild) : Component<RequestAct
 
             service.run {
                 if (updateState(selected.state)) {
+                    sync()
                     updateHeader().queueAsync()
+                    updatePermissions().queueAsync()
                 } else {
                     return@launch hook.error("Failed to update State")
                 }

@@ -3,8 +3,7 @@ package listeners
 import bjda.ui.core.UI
 import bjda.ui.core.rangeTo
 import bjda.ui.utils.UIStore
-import database.fetchRequestInfo
-import database.getRequest
+import database.fetchRequestFull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent
@@ -21,7 +20,7 @@ val actionsStore = UIStore<RequestActions.Key>()
 class Methods {
     companion object {
         const val Actions = "actions"
-        const val Modify = "modify"
+        const val Delete = "delete"
 
         fun build(method: String, vararg args: Any): String {
             val arg = args.joinToString(separator = "-")
@@ -31,7 +30,9 @@ class Methods {
     }
 }
 
-class RequestEvents: ListenerAdapter() {
+class RequestEvents: ListenerAdapter(), CoroutineScope {
+    override val coroutineContext = eventThread
+
     companion object {
         const val prefix = "__request_"
     }
@@ -59,34 +60,25 @@ class RequestEvents: ListenerAdapter() {
                     return ui.reply(event)
                 }
 
-                suspend fun loadUI() {
+                launch {
                     val hook = event.deferReply(true).queueAsync()
-                    val request = getRequest(guild.idLong, id)
-                    val info = fetchRequestInfo(guild.idLong, id)
+                    val record = fetchRequestFull(guild.idLong, id)
                     val config = GuildSettingsService(guild).getOrInit()
 
-                    if (request == null || info == null) {
+                    if (record == null) {
                         event.error("Request doesn't exists")
+                    } else {
+                        val (request, info) = record
 
-                        return
+                        UI(
+                            RequestActions(event.member!!, guild)..{
+                                this.request = request
+                                this.info = info
+                                this.config = config
+                            }
+                        ).edit(hook)
                     }
-
-                    UI(
-                        RequestActions(event.member!!, guild)..{
-                            this.request = request
-                            this.info = info
-                            this.config = config
-                        }
-                    ).edit(hook)
                 }
-
-                CoroutineScope(eventThread).launch {
-                    loadUI()
-                }
-            }
-
-            Methods.Modify -> {
-
             }
         }
     }

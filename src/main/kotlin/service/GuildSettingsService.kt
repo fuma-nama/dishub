@@ -2,42 +2,38 @@ package service
 
 import database.createGuildSettings
 import database.getGuildSettings
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import models.tables.records.GuildRecord
-import net.dv8tion.jda.api.entities.Category
 import net.dv8tion.jda.api.entities.Guild
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
+import utils.queueAsync
 
-class GuildSettingsService(val guild: Guild) {
-    suspend fun getOrInit() = suspendCoroutine { cont ->
-        getOrInit(cont::resume)
-    }
-
-    fun getOrInit(success: (GuildRecord) -> Unit) {
+class GuildSettingsService(val guild: Guild): Service {
+    suspend fun getOrInit() = coroutineScope {
         val settings = getGuildSettings(guild.idLong)
 
-        if (settings != null) {
-            success(settings)
-        } else {
-            initSettings(success)
-        }
+        settings?: initSettings()
     }
 
-    fun createContainer(success: (Category) -> Unit) {
-        guild.createCategory("Threads").queue(success)
+    fun getOrInit(success: (GuildRecord) -> Unit) = launch {
+        success(getOrInit())
     }
 
-    fun initSettings(success: (GuildRecord) -> Unit) {
+    private suspend fun createContainer() = coroutineScope {
+        guild.createCategory("Threads").queueAsync()
+    }
 
-        createContainer { container ->
+    private suspend fun initSettings() = coroutineScope {
 
-            val settings = createGuildSettings(
-                id = guild.idLong,
-                user = guild.publicRole.idLong,
-                container = container.idLong
-            ) ?: error("Unable to create guild settings")
+        val container = createContainer()
 
-            success(settings)
-        }
+        createGuildSettings(
+            id = guild.idLong,
+            container = container.idLong
+        ) ?: error("Unable to create guild settings")
+    }
+
+    private fun updateContainer() {
+
     }
 }

@@ -15,7 +15,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row5
+import org.jooq.Row3
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -72,16 +72,6 @@ open class Guild(
     val CONTAINER: TableField<GuildRecord, Long?> = createField(DSL.name("container"), SQLDataType.BIGINT.nullable(false), this, "")
 
     /**
-     * The column <code>public.guild.user_role</code>.
-     */
-    val USER_ROLE: TableField<GuildRecord, Long?> = createField(DSL.name("user_role"), SQLDataType.BIGINT.nullable(false), this, "")
-
-    /**
-     * The column <code>public.guild.admin_role</code>.
-     */
-    val ADMIN_ROLE: TableField<GuildRecord, Long?> = createField(DSL.name("admin_role"), SQLDataType.BIGINT, this, "")
-
-    /**
      * The column <code>public.guild.manager_role</code>.
      */
     val MANAGER_ROLE: TableField<GuildRecord, Long?> = createField(DSL.name("manager_role"), SQLDataType.BIGINT, this, "")
@@ -127,18 +117,18 @@ open class Guild(
     override fun rename(name: Table<*>): Guild = Guild(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row5 type methods
+    // Row3 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row5<Long?, Long?, Long?, Long?, Long?> = super.fieldsRow() as Row5<Long?, Long?, Long?, Long?, Long?>
+    override fun fieldsRow(): Row3<Long?, Long?, Long?> = super.fieldsRow() as Row3<Long?, Long?, Long?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (Long?, Long?, Long?, Long?, Long?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (Long?, Long?, Long?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (Long?, Long?, Long?, Long?, Long?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (Long?, Long?, Long?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

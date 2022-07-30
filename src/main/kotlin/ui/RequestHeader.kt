@@ -11,7 +11,7 @@ import bjda.ui.core.rangeTo
 import listeners.Methods
 import models.tables.records.RequestInfoRecord
 import models.tables.records.RequestRecord
-import variables.States
+import variables.RequestState
 import java.awt.Color
 
 class RequestHeaderProps : IProps() {
@@ -24,7 +24,7 @@ val RequestHeader = component(::RequestHeaderProps) {
     with (props) {
         val onModify = Methods.build(Methods.Actions, request.id!!)
         val tags = arrayOf("Feature").joinToString()
-        val state = States.from(info.state!!);
+        val state = RequestState.from(info.state!!);
 
         {
             + Content("**Request #${request.id}**")
