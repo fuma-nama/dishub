@@ -1,85 +1,81 @@
 package listeners
 
-import bjda.ui.core.UI
-import bjda.ui.core.rangeTo
-import bjda.ui.utils.UIStore
+import bjda.ui.core.UIOnce.Companion.buildMessage
 import database.fetchRequestFull
+import database.getRequest
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent
-import net.dv8tion.jda.api.hooks.ListenerAdapter
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import service.GuildSettingsService
+import service.request.SubscriberService
 import ui.RequestActions
+import ui.panel.SubscribedPanel
 import utils.error
+import utils.getJumpUrl
 import utils.queueAsync
 import variables.NO_GUILD
 import variables.eventThread
 
-val actionsStore = UIStore<RequestActions.Key>()
+suspend fun<T: IReplyCallback> openRequest(id: Int, event: T) = coroutineScope run@ {
+    val guild = event.guild
+        ?: return@run event.error(NO_GUILD)
 
-class Methods {
-    companion object {
-        const val Actions = "actions"
-        const val Delete = "delete"
+    val hook = event.deferReply(true).queueAsync()
+    val request = getRequest(guild.idLong, id)
 
-        fun build(method: String, vararg args: Any): String {
-            val arg = args.joinToString(separator = "-")
+    if (request == null) {
+        event.error("Request doesn't exists")
+    } else {
+        SubscriberService(guild, request).addSubscriber(event.member!!)
 
-            return "${RequestEvents.prefix}$method-$arg"
-        }
+        val ui = SubscribedPanel(getJumpUrl(request))
+
+        hook.editOriginal(ui.buildMessage()).queue()
     }
 }
 
-class RequestEvents: ListenerAdapter(), CoroutineScope {
+class RequestEvents: Listener, CoroutineScope {
     override val coroutineContext = eventThread
+    override val prefix = RequestEvents.prefix
 
-    companion object {
-        const val prefix = "__request_"
-    }
-
-    override fun onGenericComponentInteractionCreate(event: GenericComponentInteractionCreateEvent) {
-        val id = event.componentId
-
-        if (id.startsWith(prefix)) {
-
-            onEvent(id.removePrefix(prefix), event)
-        }
-    }
-
-    fun onEvent(data: String, event: GenericComponentInteractionCreateEvent) {
-        val (method, requestId) = data.split('-')
-        val id = requestId.toInt()
+    override fun onEvent(data: List<String>, event: GenericComponentInteractionCreateEvent) {
+        val (method, id) = data.parse()
         val guild = event.guild?: return event.error(NO_GUILD)
 
         when (method) {
-            Methods.Actions -> {
-                val key = RequestActions.Key(guild.idLong, id, event.user.idLong)
-                val ui = actionsStore[key]
+            Subscribe -> launch {
+                openRequest(id, event)
+            }
 
-                if (ui != null) {
-                    return ui.reply(event)
-                }
+            Actions -> launch {
+                val hook = event.deferReply(true).queueAsync()
+                val record = fetchRequestFull(guild.idLong, id)
+                val config = GuildSettingsService(guild).getOrInit()
 
-                launch {
-                    val hook = event.deferReply(true).queueAsync()
-                    val record = fetchRequestFull(guild.idLong, id)
-                    val config = GuildSettingsService(guild).getOrInit()
+                if (record == null) {
+                    event.error("Request doesn't exists")
+                } else {
+                    val (request, info) = record
 
-                    if (record == null) {
-                        event.error("Request doesn't exists")
-                    } else {
-                        val (request, info) = record
-
-                        UI(
-                            RequestActions(event.member!!, guild)..{
-                                this.request = request
-                                this.info = info
-                                this.config = config
-                            }
-                        ).edit(hook)
+                    val ui = RequestActions {
+                        this.owner = event.member!!
+                        this.guild = guild
+                        this.request = request
+                        this.info = info
+                        this.config = config
                     }
+
+                    hook.editOriginal(ui.buildMessage()).queue()
                 }
             }
         }
+    }
+
+    companion object {
+        const val prefix = "__request"
+        const val Actions = "actions"
+        const val Subscribe = "subscribe"
     }
 }

@@ -17,7 +17,16 @@ fun createGuildSettings(id: Long, container: Long): GuildRecord? {
         .fetchOne()
 }
 
-fun updateGuildSettings(id: Long, container: Long) {
+fun updateGuildManager(id: Long, manager: Long) {
+    with (GUILD) {
+        ctx.update(this)
+            .set(MANAGER_ROLE, manager)
+            .where(ID.eq(id))
+            .executeAsync()
+    }
+}
+
+fun updateGuildContainer(id: Long, container: Long) {
     with (GUILD) {
         ctx.update(this)
             .set(CONTAINER, container)

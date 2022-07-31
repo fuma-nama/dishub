@@ -1,18 +1,20 @@
 package service.request
 
-import bjda.ui.core.UIOnce
+import bjda.ui.core.UIOnce.Companion.buildMessage
 import database.editRequest
 import database.setRequestState
 import models.enums.State
 import models.tables.records.RequestInfoRecord
 import models.tables.records.RequestRecord
-import net.dv8tion.jda.api.Permission.ALL_PERMISSIONS
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.requests.RestAction
 import ui.RequestHeader
 import utils.allowRole
+import utils.allowUser
 import variables.NO_PERMISSIONS
 import variables.OPENING_PERMISSIONS
+import variables.VIEW_PERMISSION
 
 class UpdateRequestService(val guild: Guild, var request: RequestRecord, var info: RequestInfoRecord) {
     val thread by lazy {
@@ -22,12 +24,12 @@ class UpdateRequestService(val guild: Guild, var request: RequestRecord, var inf
     fun updateHeader(): RestAction<*> {
         val service = this
 
-        val ui = UIOnce(RequestHeader {
+        val ui = RequestHeader {
             this.request = service.request
             this.info = service.info
-        })
+        }
 
-        return thread.editMessageById(request.headerMessage!!, ui.get())
+        return thread.editMessageById(request.headerMessage!!, ui.buildMessage())
     }
 
     fun updatePermissions(): RestAction<*> {
@@ -47,17 +49,20 @@ class UpdateRequestService(val guild: Guild, var request: RequestRecord, var inf
         }
     }
 
-    suspend fun updateRequest(title: String, description: String): Boolean {
+    suspend fun updateRequest(title: String, description: String): Pair<RequestInfoRecord, RequestInfoRecord>? {
         val updated = editRequest(
             info.guild!!, info.request!!,
             title, description
         )
 
-        if (updated != null) {
+        return if (updated != null) {
+            val old = info
             info = updated
-        }
 
-        return updated != null
+            old to updated
+        } else {
+            null
+        }
     }
 
     suspend fun updateState(state: State): Boolean {

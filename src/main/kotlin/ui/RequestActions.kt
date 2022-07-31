@@ -1,160 +1,69 @@
 package ui
 
-import bjda.plugins.ui.hook.ButtonClick.Companion.onClick
-import bjda.plugins.ui.hook.MenuSelect.Companion.onSelect
-import bjda.plugins.ui.modal.Form.Companion.value
 import bjda.ui.component.Embed
-import bjda.ui.component.RowLayout
-import bjda.ui.component.action.Button
-import bjda.ui.component.action.Menu
+import bjda.ui.component.Embed.Companion.toComponent
+import bjda.ui.component.action.Button.Companion.secondary
+import bjda.ui.component.action.Menu.Companion.menu
+import bjda.ui.component.row.RowLayout
 import bjda.ui.core.*
-import bjda.ui.types.Children
-import kotlinx.coroutines.*
+import bjda.ui.core.FElement.Companion.element
+import bjda.utils.embed
+import listeners.ActionEvents
+import listeners.Methods
 import models.tables.records.GuildRecord
 import variables.RequestState as RequestState
 import models.tables.records.RequestInfoRecord
 import models.tables.records.RequestRecord
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Member
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
-import service.request.UpdateRequestService
-import ui.panel.StateChangePanel
-import ui.modals.EditRequestModal
 import utils.*
-import variables.eventThread
 import java.awt.Color
-import kotlin.properties.Delegates
 
-class RequestActions(val owner: Member, val guild: Guild) : Component<RequestActions.Props>(Props()), CoroutineScope {
-    override val coroutineContext = eventThread
-    private var canModifyState by Delegates.notNull<Boolean>()
-    private var canEdit by Delegates.notNull<Boolean>()
-    lateinit var service: UpdateRequestService
+class Props : IProps() {
+    lateinit var request: RequestRecord
+    lateinit var info: RequestInfoRecord
+    lateinit var config: GuildRecord
+    lateinit var owner: Member
+    lateinit var guild: Guild
+}
 
-    class Props : IProps() {
-        lateinit var request: RequestRecord
-        lateinit var info: RequestInfoRecord
-        lateinit var config: GuildRecord
-    }
+private class Option(state: RequestState, selected: Boolean) : SelectOption(
+    state.name, state.name,
+    state.description,
+    selected,
+    state.emoji
+)
 
-    override fun onMount() {
-        with (props) {
-            canModifyState = config.canModifyState(owner)
-            canEdit = request.canEditRequest(owner)
-            service = UpdateRequestService(guild, request, info)
-        }
-    }
+val RequestActions = element(::Props) {
 
-    private fun sync(): Pair<RequestInfoRecord, RequestInfoRecord> {
-        val old = props.info
+    with (props) {
+        val canModifyState = config.canModifyState(guild, owner)
+        val canEdit = request.canEditRequest(owner)
 
-        props.request = service.request
-        props.info = service.info
+        val id = request.id!!
+        val onEdit = Methods.action(ActionEvents.Open_Edit, id)
+        val onChangeState = Methods.action(ActionEvents.Change_State, id);
 
-        return old to props.info
-    }
-
-    private val editModal = EditRequestModal event@ { event ->
-        if (!canEdit) {
-            return@event event.error(
-                noPermissions("edit request", "Author")
-            )
-        }
-
-        launch {
-            val hook = event.deferReply().queueAsync()
-            val success = service.updateRequest(
-                event.value("title"), event.value("detail")
-            )
-            val (old, new) = sync()
-
-            if (success) {
-                service.updateHeader().queueAsync()
-
-
-                val ui = UIOnce(
-                    SuccessPanel(owner.user)..{
-                        title = "Edited the Request"
-                        fields = fields(
-                            field("Old Title" to old.title!!, true),
-                            field("New Title" to new.title!!, true),
-                            field("" to "", false),
-                            field("Old Detail" to old.detail!!, true),
-                            field("New Detail" to new.detail!!, true)
-                        )
-                    }
-                )
-
-                hook.editOriginal(ui.get()).queue()
-            } else {
-                hook.error("Failed to edit request")
-            }
-        }
-    }
-
-    private val onEdit by onClick { event ->
-        event.replyModal(editModal.create()).queue()
-    }
-
-    private val onChangeState by onSelect { event ->
-        val selected = RequestState.valueOf(event.values[0])
-
-        if (canModifyState) launch {
-            val hook = event.deferReply().queueAsync()
-
-            service.run {
-                if (updateState(selected.state)) {
-                    sync()
-                    updateHeader().queueAsync()
-                    updatePermissions().queueAsync()
-                } else {
-                    return@launch hook.error("Failed to update State")
-                }
-            }
-
-            val ui = UIOnce(
-                StateChangePanel(selected, event.user)
-            )
-
-            hook.editOriginal(ui.get()).queue()
-        } else {
-            event.error(noPermissions("change request state"))
-        }
-    }
-
-    override fun onRender(): Children {
-
-        return {
-            + Embed()..{
-                title = "Actions"
+        {
+            + embed(
+                title = "Actions",
                 color = Color.GREEN
-            }
+            ).toComponent()
 
-            + RowLayout()-{
+            + RowLayout() -{
                 if (canModifyState)
-                    + Menu(onChangeState) {
-                        placeholder = "Change Request state"
+                    + menu(
+                        id = onChangeState,
+                        placeholder = "Change Request state",
                         options = RequestState.values().map {
-                            Option(it, it.state == props.info.state)
+                            Option(it, it.state == info.state)
                         }
-                    }
+                    )
 
                 if (canEdit)
-                    + Button(onEdit) {
-                        label = "Edit"
-                        style = ButtonStyle.SECONDARY
-                    }
+                    + secondary(id = onEdit, label = "Edit")
             }
         }
     }
-
-    class Option(state: RequestState, selected: Boolean) : SelectOption(
-        state.name, state.name,
-        state.description,
-        selected,
-        state.emoji
-    )
-
-    data class Key(val guild: Long, val request: Int, val user: Long)
 }

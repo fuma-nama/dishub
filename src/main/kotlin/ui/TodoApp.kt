@@ -3,14 +3,15 @@ package ui
 import bjda.plugins.ui.hook.ButtonClick.Companion.onClick
 import bjda.plugins.ui.hook.MenuSelect.Companion.onSelect
 import bjda.plugins.ui.modal.Form.Companion.form
-import bjda.ui.component.Row
-import bjda.ui.component.RowLayout
+import bjda.plugins.ui.modal.Form.Companion.value
 import bjda.ui.component.Text
 import bjda.ui.component.TextType
 import bjda.ui.component.action.Button
 import bjda.ui.component.action.Menu
 import bjda.ui.component.action.Menu.Companion.createOptions
 import bjda.ui.component.action.TextField
+import bjda.ui.component.row.Row
+import bjda.ui.component.row.RowLayout
 import bjda.ui.core.Component
 import bjda.ui.core.IProps
 import bjda.ui.core.minus
@@ -103,8 +104,8 @@ class TodoApp(initialTodos: ArrayList<String>?, val lang: Translation) : Compone
             }
 
             + RowLayout() -{
-                addIf (todos.isNotEmpty()) {
-                    Menu(onSelectItem) {
+                if (todos.isNotEmpty()) {
+                    + Menu(onSelectItem) {
                         placeholder = lang("menu")["placeholder"]
 
                         options = todos.mapIndexed {i, todo ->
@@ -118,11 +119,11 @@ class TodoApp(initialTodos: ArrayList<String>?, val lang: Translation) : Compone
                 }
 
                 if (selected != null) {
-
                     + Button(onEditItem) {
                         label = lang["edit"]
                         style = ButtonStyle.PRIMARY
                     }
+
                     + Button(onDeleteItem) {
                         label = lang["delete"]
                         style = ButtonStyle.DANGER
@@ -130,7 +131,7 @@ class TodoApp(initialTodos: ArrayList<String>?, val lang: Translation) : Compone
                 }
             }
 
-            + Row()-{
+            + Row {
                 + Button(onClose) {
                     label = lang["close"]
                     style = ButtonStyle.DANGER
@@ -149,7 +150,7 @@ class TodoApp(initialTodos: ArrayList<String>?, val lang: Translation) : Compone
         }
 
         render = {
-            + row {
+            + Row {
                 + TextField("todo") {
                     label = lang["todo"]
                     style = TextInputStyle.PARAGRAPH
@@ -172,14 +173,14 @@ class TodoApp(initialTodos: ArrayList<String>?, val lang: Translation) : Compone
         render = {
             val (todos, selected) = state.get()
 
-            + row {
+            + Row {
                 + TextField("todo") {
                     label = lang("form")["new_content"]
                     value = todos[selected!!]
                     style = TextInputStyle.PARAGRAPH
                 }
             }
-            + row {
+            + Row {
                 + Menu("test") {
                     placeholder = "Select a Item"
                     options = createOptions(

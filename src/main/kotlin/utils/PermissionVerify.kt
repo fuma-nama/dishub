@@ -31,20 +31,22 @@ fun RequestRecord.canEditRequest(user: Member): Boolean {
     return this.owner == user.idLong
 }
 
-fun GuildRecord.canModifyState(user: Member): Boolean {
-    if (user.isOwner)
+fun GuildRecord.canModifyState(guild: Guild, user: Member): Boolean {
+    if (user.isOwner || guild.publicRole.idLong == managerRole)
         return true
 
-    return user.roles.any { role ->
-        role.idLong == managerRole
-    }
+    return user.isManager(managerRole)
 }
 
 fun GuildRecord.canDeleteRequest(user: Member): Boolean {
     if (user.isOwner)
         return true
 
-    return user.roles.any { role ->
-        role.idLong == managerRole
+    return user.isManager(managerRole)
+}
+
+fun Member.isManager(manager: Long?): Boolean {
+    return manager != null && roles.any { role ->
+        role.idLong == manager
     }
 }

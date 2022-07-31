@@ -2,6 +2,8 @@ package service
 
 import database.createGuildSettings
 import database.getGuildSettings
+import database.updateGuildContainer
+import database.updateGuildManager
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import models.tables.records.GuildRecord
@@ -33,7 +35,11 @@ class GuildSettingsService(val guild: Guild): Service {
         ) ?: error("Unable to create guild settings")
     }
 
-    private fun updateContainer() {
+    fun updateContainer(container: Long) {
+        updateGuildContainer(guild.idLong, container)
+    }
 
+    fun updateManagerRole(role: Long) {
+        updateGuildManager(guild.idLong, role)
     }
 }

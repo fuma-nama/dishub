@@ -1,13 +1,14 @@
 package ui.modals
 
 import bjda.plugins.ui.modal.Form
+import bjda.plugins.ui.modal.Form.Companion.value
 import bjda.ui.component.Embed
-import bjda.ui.component.Row
 import bjda.ui.component.action.Button
-import bjda.ui.component.action.TextField
+import bjda.ui.component.action.TextField.Companion.input
+import bjda.ui.component.row.Row
 import bjda.ui.core.*
+import bjda.ui.core.UIOnce.Companion.buildMessage
 import bjda.ui.types.ComponentTree
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import service.request.CreateRequestService
 import service.request.RequestOption
@@ -35,26 +36,27 @@ val CreateRequestModal = Form {
                 }
 
                 hook.editOriginal(
-                    UIOnce(panel).get()
+                    panel.buildMessage()
                 ).queue()
             }
         }
     }
 
     render = {
-        +row(
-            TextField("title") {
-                label = "Title"
-                placeholder = "Give your Request a Title"
-                maxLength = 100
-            }
+        + Row(
+            input(
+                id = "title",
+                label = "Title",
+                placeholder = "Give your Request a Title",
+                maxLength = 100)
         )
-        +row(
-            TextField("detail") {
-                label = "Detail"
-                placeholder = "Describe your request clearly"
+        + Row(
+            input(
+                id = "detail",
+                label = "Detail",
+                placeholder = "Describe your request clearly",
                 style = TextInputStyle.PARAGRAPH
-            }
+            )
         )
     }
 }
@@ -72,13 +74,12 @@ private class SuccessPanel : ElementImpl<SuccessPanel.Props>(Props()) {
                 description = "You may open request thread by the button below"
                 color = Color.GREEN
             },
-            Row() -{
-                + Button {
-                    label = "Open Thread"
+            Row(
+                Button.link(
+                    label = "Open Thread",
                     url = props.threadUrl
-                    style = ButtonStyle.LINK
-                }
-            }
+                )
+            )
         )
     }
 }

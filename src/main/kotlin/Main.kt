@@ -1,6 +1,7 @@
 import bjda.BJDA
 import bjda.plugins.supercommand.SuperCommandModule
 import bjda.plugins.ui.UIEventModule
+import commands.SettingsCommands
 import commands.request.RequestCommands
 import commands.thread.ThreadCommands
 import net.dv8tion.jda.api.JDABuilder
@@ -8,6 +9,7 @@ import org.jooq.DSLContext
 import org.jooq.SQLDialect
 import org.jooq.impl.DSL
 import commands.todo.TodoCommands
+import listeners.AllEvents
 import listeners.RequestEvents
 import token.TOKEN
 import java.net.URI
@@ -23,14 +25,15 @@ fun main() {
         .build()
         .awaitReady()
 
-    jda.addEventListener(RequestEvents())
+    jda.addEventListener(AllEvents())
 
     BJDA.create(jda)
         .install(
             SuperCommandModule(
                 TodoCommands,
                 RequestCommands,
-                ThreadCommands
+                ThreadCommands,
+                SettingsCommands
             ),
             UIEventModule(),
         )

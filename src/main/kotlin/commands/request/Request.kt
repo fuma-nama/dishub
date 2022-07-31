@@ -1,25 +1,75 @@
 package commands.request
 
+import bjda.plugins.supercommand.CommandHandler
 import bjda.plugins.supercommand.EventInfo
 import bjda.plugins.supercommand.SuperCommand
 import bjda.plugins.supercommand.SuperCommandGroup.Companion.create
+import bjda.ui.core.UI
+import bjda.ui.core.UIOnce.Companion.buildMessage
+import bjda.utils.embed
+import database.countRequest
+import database.getRequest
 import database.getRequestByThread
+import database.listRequests
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import listeners.openRequest
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.components.buttons.Button
 import service.request.DeleteRequestService
 import service.GuildSettingsService
+import service.request.SubscriberService
 import ui.modals.CreateRequestModal
+import ui.panel.RequestsList
 import utils.*
 import variables.NO_GUILD
 import variables.eventThread
+import kotlin.coroutines.CoroutineContext
 
 val RequestCommands = create(
     "request", "Call Dishub Request Features",
-    Create(), Delete()
+    Open(), Create(), Delete(), List()
 )
 
+private class Open : SuperCommand("open", "Open and Subscribe to the Request"), CoroutineScope {
+    override val coroutineContext = eventThread
+
+    val request = int("request", "The request Id to open")
+    override val run: CommandHandler = {
+        launch {
+            openRequest(request(), event)
+        }
+    }
+}
+
+private class List : SuperCommand("list", "List all requests"), EventCoroutine {
+    override val coroutineContext = eventThread
+
+    override val run = fun EventInfo.() {
+        val guild = event.guild
+            ?: return event.error(NO_GUILD)
+
+        event.later {
+            val requests = listRequests(guild.idLong, 0)
+            val count = countRequest(guild.idLong)
+
+            val ui = UI(
+                RequestsList {
+                    this.requests = requests
+                    this.count = count
+                    this.next = { offset ->
+                        listRequests(guild.idLong, offset).also { result ->
+                            println(result)
+                        }
+                    }
+                }
+            )
+
+            ui.edit(it)
+        }
+    }
+}
 
 private class Create : SuperCommand("create", "Create a new Request") {
 

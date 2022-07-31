@@ -26,6 +26,23 @@ fun addRequest(guild: Long, owner: Long, thread: Long, message: Long): RequestRe
     }
 }
 
+suspend fun listRequests(guild: Long, offset: Int) = coroutineScope {
+    with (REQUEST) {
+        ctx.select(this, REQUEST_INFO).from(this)
+            .join(REQUEST_INFO).on(REQUEST_INFO.GUILD.eq(GUILD), REQUEST_INFO.REQUEST.eq(ID))
+            .where(GUILD.eq(guild))
+            .offset(offset)
+            .limit(10)
+            .fetch()
+    }
+}
+
+fun countRequest(guild: Long): Int {
+    with (REQUEST) {
+        return ctx.fetchCount(this, GUILD.eq(guild))
+    }
+}
+
 fun getRequest(guild: Long, id: Int): RequestRecord? {
     with (REQUEST) {
         return ctx.fetchOne(this, GUILD.eq(guild),ID.eq(id))
@@ -72,10 +89,10 @@ fun createInfo(guild: Long, request: Int, title: String, detail: String): Reques
     }
 }
 
-fun fetchRequestFull(guild: Long, request: Int): Record2<RequestRecord, RequestInfoRecord>? {
+suspend fun fetchRequestFull(guild: Long, request: Int) = coroutineScope {
 
     with (REQUEST) {
-        return ctx.select(this, REQUEST_INFO).from(this)
+        ctx.select(this, REQUEST_INFO).from(this)
             .join(REQUEST_INFO)
             .on(REQUEST_INFO.GUILD.eq(GUILD), REQUEST_INFO.REQUEST.eq(ID))
             .where(ID.eq(request), GUILD.eq(guild))
