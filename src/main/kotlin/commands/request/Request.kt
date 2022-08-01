@@ -2,30 +2,28 @@ package commands.request
 
 import bjda.plugins.supercommand.CommandHandler
 import bjda.plugins.supercommand.EventInfo
+import bjda.plugins.supercommand.IOptionValue.Companion.choice
 import bjda.plugins.supercommand.SuperCommand
 import bjda.plugins.supercommand.SuperCommandGroup.Companion.create
 import bjda.ui.core.UI
-import bjda.ui.core.UIOnce.Companion.buildMessage
-import bjda.utils.embed
 import database.countRequest
-import database.getRequest
 import database.getRequestByThread
 import database.listRequests
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import listeners.openRequest
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.interactions.commands.OptionType
-import net.dv8tion.jda.api.interactions.components.buttons.Button
 import service.request.DeleteRequestService
 import service.GuildSettingsService
-import service.request.SubscriberService
 import ui.modals.CreateRequestModal
+import ui.panel.Key
 import ui.panel.RequestsList
 import utils.*
 import variables.NO_GUILD
+import variables.RequestState
 import variables.eventThread
-import kotlin.coroutines.CoroutineContext
 
 val RequestCommands = create(
     "request", "Call Dishub Request Features",
@@ -36,6 +34,8 @@ private class Open : SuperCommand("open", "Open and Subscribe to the Request"), 
     override val coroutineContext = eventThread
 
     val request = int("request", "The request Id to open")
+        .required(true)
+
     override val run: CommandHandler = {
         launch {
             openRequest(request(), event)
@@ -46,23 +46,49 @@ private class Open : SuperCommand("open", "Open and Subscribe to the Request"), 
 private class List : SuperCommand("list", "List all requests"), EventCoroutine {
     override val coroutineContext = eventThread
 
+    val author = option<Member>(OptionType.USER, "author", "Specially the author of Request")
+        .optional()
+
+    val state = text("state", "Specially Requests State")
+        .choices(
+            RequestState.values().map {
+                choice(
+                    key = "${it.emoji.formatted} ${it.name}",
+                    value = it.name
+                )
+            }
+        )
+        .optional()
+        .map { it?.let(RequestState::valueOf) }
+
     override val run = fun EventInfo.() {
         val guild = event.guild
             ?: return event.error(NO_GUILD)
+        val author = author()
+        val state = state()
 
         event.later {
-            val requests = listRequests(guild.idLong, 0)
-            val count = countRequest(guild.idLong)
+
+            suspend fun next(offset: Int) = listRequests(
+                guild.idLong,
+                offset = offset,
+                author = author?.idLong,
+                state = state?.state
+            )
+
+            val requests = next(0)
+            val count = countRequest(
+                guild.idLong,
+                author = author?.idLong,
+                state = state?.state
+            )?: 0
 
             val ui = UI(
                 RequestsList {
+                    this.key = Key(event.user)
                     this.requests = requests
                     this.count = count
-                    this.next = { offset ->
-                        listRequests(guild.idLong, offset).also { result ->
-                            println(result)
-                        }
-                    }
+                    this.next = { offset -> next(offset) }
                 }
             )
 
@@ -76,7 +102,7 @@ private class Create : SuperCommand("create", "Create a new Request") {
     override val run = fun EventInfo.() {
         event.guild?: return event.error(NO_GUILD)
 
-        event.replyModal(CreateRequestModal.create())
+        event.replyModal(CreateRequestModal)
             .queue()
     }
 }

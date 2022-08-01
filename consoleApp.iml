@@ -38,7 +38,7 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.junit.platform:junit-platform-commons:1.6.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.junit.jupiter:junit-jupiter-engine:5.6.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.junit.platform:junit-platform-engine:1.6.0" level="project" />
-    <orderEntry type="library" name="Maven: io.github.sonmoosans:bjda:4.3.3" level="project" />
+    <orderEntry type="library" name="Maven: io.github.sonmoosans:bjda:4.3.5" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.7.0" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.7.0" level="project" />
     <orderEntry type="library" name="Maven: com.github.ajalt.clikt:clikt-jvm:3.5.0" level="project" />
@@ -69,8 +69,15 @@
     <orderEntry type="library" name="Maven: jakarta.xml.bind:jakarta.xml.bind-api:3.0.0" level="project" />
     <orderEntry type="library" name="Maven: com.sun.activation:jakarta.activation:2.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.jooq:jooq-meta:3.17.2" level="project" />
+    <orderEntry type="library" name="Maven: com.github.ben-manes.caffeine:caffeine:3.1.1" level="project" />
+    <orderEntry type="library" name="Maven: org.checkerframework:checker-qual:3.22.0" level="project" />
+    <orderEntry type="library" name="Maven: com.google.errorprone:error_prone_annotations:2.14.0" level="project" />
+    <orderEntry type="library" name="Maven: com.varabyte.kotter:kotter:0.9.9" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: org.jline:jline-terminal:3.20.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: org.jline:jline-terminal-jansi:3.20.0" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: org.fusesource.jansi:jansi:2.3.2" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: net.jcip:jcip-annotations:1.0" level="project" />
     <orderEntry type="library" name="Maven: org.jooq:jooq-codegen:3.17.2" level="project" />
     <orderEntry type="library" name="Maven: org.postgresql:postgresql:42.4.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.checkerframework:checker-qual:3.5.0" level="project" />
   </component>
 </module>

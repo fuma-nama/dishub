@@ -1,7 +1,5 @@
 package ui
 
-import bjda.ui.component.Embed
-import bjda.ui.component.Embed.Companion.toComponent
 import bjda.ui.component.action.Button.Companion.secondary
 import bjda.ui.component.action.Menu.Companion.menu
 import bjda.ui.component.row.RowLayout
@@ -49,7 +47,7 @@ val RequestActions = element(::Props) {
             + embed(
                 title = "Actions",
                 color = Color.GREEN
-            ).toComponent()
+            )
 
             + RowLayout() -{
                 if (canModifyState)

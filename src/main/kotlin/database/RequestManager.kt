@@ -8,8 +8,8 @@ import models.tables.records.RequestRecord
 import models.tables.references.REQUEST
 import models.tables.references.REQUEST_INFO
 import models.tables.references.SUBSCRIPTION
-import org.jooq.Record2
-import java.util.function.Consumer
+import org.jooq.Condition
+import ui.panel.MAX_REQUESTS
 
 /**
  * Insert a new request
@@ -26,20 +26,54 @@ fun addRequest(guild: Long, owner: Long, thread: Long, message: Long): RequestRe
     }
 }
 
-suspend fun listRequests(guild: Long, offset: Int) = coroutineScope {
+suspend fun listRequests(
+    guild: Long,
+    offset: Int,
+    limit: Int = MAX_REQUESTS,
+    author: Long?,
+    state: State?
+) = coroutineScope {
     with (REQUEST) {
+        val conditions = ArrayList<Condition>().apply {
+
+            add(GUILD.eq(guild))
+
+            if (author != null)
+                add(OWNER.eq(author))
+
+            if (state != null)
+                add(REQUEST_INFO.STATE.eq(state))
+        }
+
         ctx.select(this, REQUEST_INFO).from(this)
             .join(REQUEST_INFO).on(REQUEST_INFO.GUILD.eq(GUILD), REQUEST_INFO.REQUEST.eq(ID))
-            .where(GUILD.eq(guild))
+            .where(conditions)
             .offset(offset)
-            .limit(10)
+            .limit(limit)
             .fetch()
     }
 }
 
-fun countRequest(guild: Long): Int {
+fun countRequest(guild: Long, state: State?, author: Long?): Int? {
     with (REQUEST) {
-        return ctx.fetchCount(this, GUILD.eq(guild))
+        val conditions = ArrayList<Condition>().apply {
+            add(GUILD.eq(guild))
+
+            if (author != null)
+                add(OWNER.eq(author))
+
+            if (state != null)
+                add(REQUEST_INFO.STATE.eq(state))
+        }
+
+        val (count) = ctx.selectCount().from(this)
+            .join(REQUEST_INFO)
+            .on(REQUEST_INFO.GUILD.eq(guild), REQUEST_INFO.REQUEST.eq(ID))
+            .where(conditions)
+            .fetchOne()
+            ?: return null
+
+        return count
     }
 }
 

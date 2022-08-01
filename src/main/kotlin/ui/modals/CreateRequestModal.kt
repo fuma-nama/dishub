@@ -1,48 +1,27 @@
 package ui.modals
 
-import bjda.plugins.ui.modal.Form
 import bjda.plugins.ui.modal.Form.Companion.value
+import bjda.plugins.ui.modal.ModalPool
+import bjda.plugins.ui.modal.modal
 import bjda.ui.component.Embed
 import bjda.ui.component.action.Button
 import bjda.ui.component.action.TextField.Companion.input
 import bjda.ui.component.row.Row
 import bjda.ui.core.*
 import bjda.ui.core.UIOnce.Companion.buildMessage
+import bjda.ui.core.hooks.Delegate
 import bjda.ui.types.ComponentTree
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import service.request.CreateRequestService
 import service.request.RequestOption
 import java.awt.Color
 
-val CreateRequestModal = Form {
-    title = "Create a Request"
+val CreateRequestModal by Delegate {
+    pool.next(onSubmit)
+}
 
-    onSubmit = { event ->
-        val guild = event.guild!!
-
-        event.deferReply(true).queue { hook ->
-
-            val info = RequestOption(
-                event.value("title"),
-                event.value("detail"),
-                event.user
-            )
-
-            CreateRequestService(guild).create(info) { request ->
-
-                val panel = SuccessPanel()..{
-                    requestId = request.id!!
-                    threadUrl = "https://discord.com/channels/${guild.id}/${request.thread}"
-                }
-
-                hook.editOriginal(
-                    panel.buildMessage()
-                ).queue()
-            }
-        }
-    }
-
-    render = {
+private val pool = ModalPool.multi(
+    modal("Create a Request") {
         + Row(
             input(
                 id = "title",
@@ -50,6 +29,7 @@ val CreateRequestModal = Form {
                 placeholder = "Give your Request a Title",
                 maxLength = 100)
         )
+
         + Row(
             input(
                 id = "detail",
@@ -58,6 +38,31 @@ val CreateRequestModal = Form {
                 style = TextInputStyle.PARAGRAPH
             )
         )
+    }
+)
+
+private val onSubmit = pool.listen { event ->
+    val guild = event.guild!!
+
+    event.deferReply(true).queue { hook ->
+
+        val info = RequestOption(
+            event.value("title"),
+            event.value("detail"),
+            event.user
+        )
+
+        CreateRequestService(guild).create(info) { request ->
+
+            val panel = SuccessPanel()..{
+                requestId = request.id!!
+                threadUrl = "https://discord.com/channels/${guild.id}/${request.thread}"
+            }
+
+            hook.editOriginal(
+                panel.buildMessage()
+            ).queue()
+        }
     }
 }
 

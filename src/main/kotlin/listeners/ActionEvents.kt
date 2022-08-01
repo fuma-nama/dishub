@@ -24,15 +24,8 @@ import variables.NO_GUILD
 import variables.RequestState
 import variables.eventThread
 
-class ActionEvents: Listener, CoroutineScope {
-    override val coroutineContext = eventThread
+class ActionEvents: Listener, EventCoroutine {
     override val prefix = ActionEvents.prefix
-
-    fun IReplyCallback.later(ephemeral: Boolean = false, block: suspend CoroutineScope.(InteractionHook) -> Unit) {
-        deferReply(ephemeral).queue { hook ->
-            launch { block(hook) }
-        }
-    }
 
     override fun onEvent(data: List<String>, event: ModalInteractionEvent) {
         val guild = event.guild?: return event.error(NO_GUILD)

@@ -19,6 +19,14 @@
 
     <repositories>
         <repository>
+            <id>data2viz-dev</id>
+            <url>https://maven.pkg.jetbrains.space/data2viz/p/maven/dev</url>
+        </repository>
+        <repository>
+            <id>data2viz-public</id>
+            <url>https://maven.pkg.jetbrains.space/data2viz/p/maven/public</url>
+        </repository>
+        <repository>
             <id>mavenCentral</id>
             <url>https://repo1.maven.org/maven2/</url>
         </repository>
@@ -149,7 +157,7 @@
         <dependency>
             <groupId>io.github.sonmoosans</groupId>
             <artifactId>bjda</artifactId>
-            <version>4.3.3</version>
+            <version>4.3.5</version>
         </dependency>
         <dependency>
             <groupId>club.minnced</groupId>
@@ -178,6 +186,16 @@
             <groupId>org.jooq</groupId>
             <artifactId>jooq-meta</artifactId>
             <version>3.17.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.varabyte.kotter</groupId>
+            <artifactId>kotter</artifactId>
+            <version>0.9.9</version>
         </dependency>
         <dependency>
             <groupId>org.jooq</groupId>

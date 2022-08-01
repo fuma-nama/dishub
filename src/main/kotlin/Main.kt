@@ -9,8 +9,8 @@ import org.jooq.DSLContext
 import org.jooq.SQLDialect
 import org.jooq.impl.DSL
 import commands.todo.TodoCommands
+import console.start
 import listeners.AllEvents
-import listeners.RequestEvents
 import token.TOKEN
 import java.net.URI
 import java.net.URISyntaxException
@@ -37,6 +37,10 @@ fun main() {
             ),
             UIEventModule(),
         )
+
+    Thread {
+        start()
+    }.start()
 }
 
 @Throws(URISyntaxException::class, SQLException::class)
