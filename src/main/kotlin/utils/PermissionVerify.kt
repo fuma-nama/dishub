@@ -31,6 +31,14 @@ fun RequestRecord.canEditRequest(user: Member): Boolean {
     return this.owner == user.idLong
 }
 
+fun GuildRecord.canModifyTags(guild: Guild, user: Member): Boolean {
+    if (user.isOwner || guild.publicRole.idLong == managerRole)
+        return true
+
+    return user.isManager(managerRole)
+}
+
+
 fun GuildRecord.canModifyState(guild: Guild, user: Member): Boolean {
     if (user.isOwner || guild.publicRole.idLong == managerRole)
         return true

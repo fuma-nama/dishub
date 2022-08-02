@@ -2,19 +2,17 @@ package service.request
 
 import bjda.ui.core.UIOnce.Companion.buildMessage
 import database.editRequest
+import database.modifyRequestTags
 import database.setRequestState
 import models.enums.State
 import models.tables.records.RequestInfoRecord
 import models.tables.records.RequestRecord
 import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.requests.RestAction
 import ui.RequestHeader
 import utils.allowRole
-import utils.allowUser
 import variables.NO_PERMISSIONS
 import variables.OPENING_PERMISSIONS
-import variables.VIEW_PERMISSION
 
 class UpdateRequestService(val guild: Guild, var request: RequestRecord, var info: RequestInfoRecord) {
     val thread by lazy {
@@ -49,20 +47,26 @@ class UpdateRequestService(val guild: Guild, var request: RequestRecord, var inf
         }
     }
 
+    suspend fun updateTags(tags: Array<String>?): Pair<RequestInfoRecord, RequestInfoRecord>? {
+        val updated = modifyRequestTags(guild.idLong, request.id!!, tags)
+            ?: return null
+
+        val old = info
+        info = updated
+
+        return old to updated
+    }
+
     suspend fun updateRequest(title: String, description: String): Pair<RequestInfoRecord, RequestInfoRecord>? {
         val updated = editRequest(
             info.guild!!, info.request!!,
             title, description
-        )
+        )?: return null
 
-        return if (updated != null) {
-            val old = info
-            info = updated
+        val old = info
+        info = updated
 
-            old to updated
-        } else {
-            null
-        }
+        return old to updated
     }
 
     suspend fun updateState(state: State): Boolean {

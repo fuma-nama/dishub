@@ -1,6 +1,5 @@
 package ui.modals
 
-import bjda.plugins.ui.modal.Form.Companion.value
 import bjda.plugins.ui.modal.ModalPool
 import bjda.plugins.ui.modal.modal
 import bjda.ui.component.Embed
@@ -14,6 +13,7 @@ import bjda.ui.types.ComponentTree
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 import service.request.CreateRequestService
 import service.request.RequestOption
+import utils.parseTags
 import java.awt.Color
 
 val CreateRequestModal by Delegate {
@@ -38,6 +38,16 @@ private val pool = ModalPool.multi(
                 style = TextInputStyle.PARAGRAPH
             )
         )
+
+        + Row(
+            input(
+                id = "tags",
+                label = "Tags (Split by space)",
+                placeholder = "ex: feature bug improvement",
+                style = TextInputStyle.SHORT,
+                required = false
+            )
+        )
     }
 )
 
@@ -49,7 +59,8 @@ private val onSubmit = pool.listen { event ->
         val info = RequestOption(
             event.value("title"),
             event.value("detail"),
-            event.user
+            event.user,
+            parseTags(event["tags"])
         )
 
         CreateRequestService(guild).create(info) { request ->

@@ -1,6 +1,6 @@
 package service.request
 
-import bjda.ui.core.UIOnce
+import bjda.ui.core.UIOnce.Companion.buildMessage
 import database.addRequest
 import database.addSubscriber
 import database.createInfo
@@ -36,7 +36,7 @@ class CreateRequestService(val guild: Guild): Service {
         val request = addRequest(guild.idLong, requester, thread.idLong, header.idLong)
             ?: error("Failed to create request")
 
-        val info = createInfo(request, option.title, option.description)!!
+        val info = createInfo(request, option.title, option.description, option.tags)!!
 
         combine(
             initThread(request.id!!, requester, config),
@@ -76,13 +76,15 @@ class CreateRequestService(val guild: Guild): Service {
     }
 
     private fun initHeader(info: RequestInfoRecord, request: RequestRecord): RestAction<*> {
-        val ui = UIOnce(RequestHeader {
+        val ui = RequestHeader {
             this.request = request
             this.info = info
-        })
+        }
 
-        return thread.editMessageById(request.headerMessage!!, ui.get())
+        return thread.editMessageById(request.headerMessage!!, ui.buildMessage().also {
+            println(it.embeds)
+        })
     }
 }
 
-data class RequestOption(val title: String, val description: String, val requester: User)
+class RequestOption(val title: String, val description: String, val requester: User, val tags: Array<String>?)

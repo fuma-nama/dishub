@@ -9,6 +9,7 @@ import bjda.ui.component.row.Row
 import bjda.ui.core.FComponent.Companion.component
 import bjda.ui.core.IProps
 import bjda.ui.core.rangeTo
+import bjda.utils.convert
 import bjda.utils.embed
 import bjda.utils.field
 import kotlinx.coroutines.launch
@@ -79,53 +80,58 @@ val RequestsList = component(::RequestsListProps) {
         val offset = state.value.offset
 
         update(event, offset - MAX_REQUESTS)
-    }
+    };
 
-    ;{
-    val (requests, offset) = state.get()
-    val max = props.count
+    {
+        val (requests, offset) = state.get()
+        val max = props.count
 
-    + Content("**Requests** (${offset.coerceAtMost(max)}/$max)")
+        + Content("**Requests** (${offset.coerceAtMost(max)}/$max)")
 
-    + on(requests.isEmpty()) {
-        Text()..{
-            content = "Not more results"
-            type = TextType.CODE_BLOCK
+        + on(requests.isEmpty()) {
+            Text()..{
+                content = "Not more results"
+                type = TextType.CODE_BLOCK
+            }
         }
-    }
 
-    - requests.map {(request, info) ->
-        embed(
-            title = info.title,
-            description = info.detail?.take(100),
-            url = getJumpUrl(request),
+        + requests.map { pair ->
+            Item(pair)
+        }.convert()
 
-            fields = listOf(
-                field(
-                    name = "ID",
-                    value = request.id.toString(),
-                    inline = true
-                ),
-
-                field(
-                    name = "State",
-                    value = RequestState.from(info.state!!).run {
-                        "${emoji.formatted} $name"
-                    },
-                    inline = true
-                ),
-
-                field(
-                    name = "Requester",
-                    value = "<@${request.owner}>"
-                )
-            ),
+        + Row(
+            Button.primary(onPrev, "<-", disabled = offset < MAX_REQUESTS),
+            Button.primary(onNext, "->", disabled = offset >= max)
         )
     }
+}
 
-    + Row(
-        Button.primary(onPrev, "<-", disabled = offset < MAX_REQUESTS),
-        Button.primary(onNext, "->", disabled = offset >= max)
+private val Item = { (request, info): Record2<RequestRecord, RequestInfoRecord> ->
+    embed(
+        title = info.title,
+        description = info.detail?.take(100),
+        url = getJumpUrl(request),
+
+        fields = listOf(
+            field(
+                name = "ID",
+                value = request.id.toString(),
+                inline = true
+            ),
+
+            field(
+                name = "State",
+                value = RequestState.from(info.state!!).run {
+                    "${emoji.formatted} $name"
+                },
+                inline = true
+            ),
+
+            field(
+                name = "Requester",
+                value = "<@${request.owner}>",
+                inline = true
+            )
+        ),
     )
-    }
 }

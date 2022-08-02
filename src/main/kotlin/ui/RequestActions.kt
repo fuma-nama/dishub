@@ -37,10 +37,12 @@ val RequestActions = element(::Props) {
 
     with (props) {
         val canModifyState = config.canModifyState(guild, owner)
+        val canModifyTags = config.canModifyTags(guild, owner)
         val canEdit = request.canEditRequest(owner)
 
         val id = request.id!!
         val onEdit = Methods.action(ActionEvents.Open_Edit, id)
+        val onModifyTags = Methods.action(ActionEvents.Open_Modify_Tags, id)
         val onChangeState = Methods.action(ActionEvents.Change_State, id);
 
         {
@@ -60,7 +62,9 @@ val RequestActions = element(::Props) {
                     )
 
                 if (canEdit)
-                    + secondary(id = onEdit, label = "Edit")
+                    + secondary(id = onEdit, label = "Edit Request")
+                if (canModifyTags)
+                    + secondary(id = onModifyTags, label = "Modify Tags")
             }
         }
     }

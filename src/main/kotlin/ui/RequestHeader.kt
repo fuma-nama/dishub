@@ -7,13 +7,17 @@ import bjda.ui.component.row.Row
 import bjda.ui.core.FComponent.Companion.component
 import bjda.ui.core.IProps
 import bjda.ui.core.rangeTo
+import bjda.utils.blank
+import bjda.utils.embed
 import bjda.utils.field
 import listeners.Methods
 import listeners.RequestEvents
 import models.tables.records.RequestInfoRecord
 import models.tables.records.RequestRecord
+import net.dv8tion.jda.api.entities.EmbedType
 import variables.RequestState
 import java.awt.Color
+import java.time.format.DateTimeFormatter
 
 class RequestHeaderProps : IProps() {
     lateinit var request: RequestRecord
@@ -24,7 +28,10 @@ val RequestHeader = component(::RequestHeaderProps) {
 
     with (props) {
         val onActions = Methods.request(RequestEvents.Actions, request.id!!)
-        val tags = arrayOf("Feature").joinToString()
+
+        val tags = info.tags?.joinToString()
+            ?: "No Tags"
+
         val state = RequestState.from(info.state!!);
 
         {
@@ -35,10 +42,12 @@ val RequestHeader = component(::RequestHeaderProps) {
                 color = Color.GREEN
             }
             + Embed()..{
-                fields = arrayListOf(
+                fields = listOf(
                     field("State", "${state.emoji.formatted} ${state.name}", true),
-                    field("Requester", "<@${request.owner}>", true),
-                    field("Tags", tags)
+                    field("Requested By", "<@${request.owner}>", true),
+                    blank(),
+                    field("Tags", tags, true),
+                    field("Created at", request.createdAt!!.format(DateTimeFormatter.ISO_DATE), true)
                 )
                 color = Color.BLACK
             }

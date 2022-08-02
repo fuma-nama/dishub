@@ -29,6 +29,13 @@ infix fun InteractionHook.error(message: MessageEmbed) {
     }
 }
 
+fun parseTags(tags: String?): Array<String>? {
+    if (tags == null || tags.isEmpty())
+        return null
+
+    return tags.split(" ").toTypedArray()
+}
+
 fun buildError(message: String): MessageEmbed {
     val embed = EmbedBuilder().apply {
         setTitle("Error")

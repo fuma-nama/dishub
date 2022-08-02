@@ -1,28 +1,22 @@
 package listeners
 
-import bjda.plugins.ui.modal.Form.Companion.value
 import bjda.ui.core.UIOnce.Companion.buildMessage
-import bjda.ui.core.rangeTo
-import bjda.utils.blank
-import bjda.utils.field
 import database.fetchRequestFull
 import database.fetchRequestInfo
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
-import net.dv8tion.jda.api.interactions.InteractionHook
-import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import service.GuildSettingsService
 import service.request.UpdateRequestService
-import ui.SuccessPanel
 import ui.modals.EditRequestModal
+import ui.modals.ModifyTagsModal
+import ui.modals.get
+import ui.modals.value
+import ui.panel.RequestUpdatePanel
 import ui.panel.StateChangePanel
 import utils.*
 import variables.NO_GUILD
 import variables.RequestState
-import variables.eventThread
 
 class ActionEvents: Listener, EventCoroutine {
     override val prefix = ActionEvents.prefix
@@ -48,9 +42,11 @@ class ActionEvents: Listener, EventCoroutine {
                 }
 
                 UpdateRequestService(guild, request, info).run {
-                    val (old, new) = updateRequest(
+                    val pair = updateRequest(
                         event.value("title"), event.value("detail")
-                    )?: run {
+                    )
+
+                    if (pair == null) {
                         hook.error("Failed to edit request")
 
                         return@later
@@ -58,16 +54,31 @@ class ActionEvents: Listener, EventCoroutine {
 
                     updateHeader().queueAsync()
 
-                    val ui = SuccessPanel(event.user)..{
-                        title = "Edited the Request"
-                        fields = listOf(
-                            field("Old Title", old.title!!, true),
-                            field("New Title", new.title!!, true),
-                            blank(),
-                            field("Old Detail", old.detail!!, true),
-                            field("New Detail", new.detail!!, true)
-                        )
+                    val ui = RequestUpdatePanel(event.user, pair)
+
+                    hook.editOriginal(ui.buildMessage()).queue()
+                }
+            }
+
+            Modify_Tags -> event.later { hook ->
+                val (request, info) = fetchRequestFull(guild.idLong, id)
+                    ?: run {
+                        event.error("Request doesn't exists")
+
+                        return@later
                     }
+                val tags = parseTags(event["tags"])
+
+                UpdateRequestService(guild, request, info).run update@ {
+                    val pair = updateTags(tags)?: run {
+                        hook.error("Failed to update Tags")
+
+                        return@update
+                    }
+
+                    updateHeader().queueAsync()
+
+                    val ui = RequestUpdatePanel(event.user, pair)
 
                     hook.editOriginal(ui.buildMessage()).queue()
                 }
@@ -125,6 +136,14 @@ class ActionEvents: Listener, EventCoroutine {
                 val modal = EditRequestModal(id, info)
                 event.replyModal(modal).queue()
             }
+            Open_Modify_Tags -> {
+                val info = fetchRequestInfo(guild.idLong, id)
+                    ?: return event.error("Request doesn't exists")
+
+                val modal = ModifyTagsModal(id, info)
+
+                event.replyModal(modal).queue()
+            }
         }
     }
 
@@ -133,5 +152,7 @@ class ActionEvents: Listener, EventCoroutine {
         const val Change_State = "change_state"
         const val Open_Edit = "open_edit"
         const val Edit = "edit"
+        const val Open_Modify_Tags = "open_modify_tags"
+        const val Modify_Tags = "modify_tags"
     }
 }

@@ -5,10 +5,11 @@ import kotlinx.coroutines.coroutineScope
 import models.enums.State
 import models.tables.records.RequestInfoRecord
 import models.tables.records.RequestRecord
+import models.tables.records.SubscriptionRecord
 import models.tables.references.REQUEST
 import models.tables.references.REQUEST_INFO
 import models.tables.references.SUBSCRIPTION
-import org.jooq.Condition
+import org.jooq.*
 import ui.panel.MAX_REQUESTS
 
 /**
@@ -30,46 +31,35 @@ suspend fun listRequests(
     guild: Long,
     offset: Int,
     limit: Int = MAX_REQUESTS,
-    author: Long?,
-    state: State?
+    filter: Filter
 ) = coroutineScope {
+
     with (REQUEST) {
-        val conditions = ArrayList<Condition>().apply {
-
-            add(GUILD.eq(guild))
-
-            if (author != null)
-                add(OWNER.eq(author))
-
-            if (state != null)
-                add(REQUEST_INFO.STATE.eq(state))
-        }
 
         ctx.select(this, REQUEST_INFO).from(this)
-            .join(REQUEST_INFO).on(REQUEST_INFO.GUILD.eq(GUILD), REQUEST_INFO.REQUEST.eq(ID))
-            .where(conditions)
+            .let {
+                filter.joinInfo(it)
+
+                if (filter.fetchSubscription) {
+                    filter.joinSubscription(it)
+                }
+
+                filter.where(it, GUILD.eq(guild))
+            }
+            .orderBy(CREATED_AT.desc().nullsLast())
             .offset(offset)
             .limit(limit)
             .fetch()
     }
 }
 
-fun countRequest(guild: Long, state: State?, author: Long?): Int? {
+fun countRequest(guild: Long, filter: Filter): Int? {
     with (REQUEST) {
-        val conditions = ArrayList<Condition>().apply {
-            add(GUILD.eq(guild))
-
-            if (author != null)
-                add(OWNER.eq(author))
-
-            if (state != null)
-                add(REQUEST_INFO.STATE.eq(state))
-        }
 
         val (count) = ctx.selectCount().from(this)
-            .join(REQUEST_INFO)
-            .on(REQUEST_INFO.GUILD.eq(guild), REQUEST_INFO.REQUEST.eq(ID))
-            .where(conditions)
+            .apply {
+                filter.filter(this, GUILD.eq(guild))
+            }
             .fetchOne()
             ?: return null
 
@@ -83,9 +73,9 @@ fun getRequest(guild: Long, id: Int): RequestRecord? {
     }
 }
 
-fun getRequestByThread(thread: Long): RequestRecord? {
+fun getRequestByThread(guild: Long, thread: Long): RequestRecord? {
     with (REQUEST) {
-        return ctx.fetchOne(this, THREAD.eq(thread))
+        return ctx.fetchOne(this, GUILD.eq(guild), THREAD.eq(thread))
     }
 }
 
@@ -110,14 +100,24 @@ fun addSubscriber(user: Long, guild: Long, request: Int) {
     }
 }
 
-fun createInfo(request: RequestRecord, title: String, detail: String): RequestInfoRecord? {
-    return createInfo(request.guild!!, request.id!!, title, detail)
+fun removeSubscriber(user: Long, guild: Long, request: Int): SubscriptionRecord? {
+    with (SUBSCRIPTION) {
+
+        return ctx.delete(this)
+            .where(USER.eq(user), GUILD.eq(guild), REQUEST.eq(request))
+            .returning()
+            .fetchOne()
+    }
 }
 
-fun createInfo(guild: Long, request: Int, title: String, detail: String): RequestInfoRecord? {
+fun createInfo(request: RequestRecord, title: String, detail: String, tags: Array<String>?): RequestInfoRecord? {
+    return createInfo(request.guild!!, request.id!!, title, detail, tags)
+}
+
+fun createInfo(guild: Long, request: Int, title: String, detail: String, tags: Array<String>?): RequestInfoRecord? {
     with (REQUEST_INFO) {
-        return ctx.insertInto(this, GUILD, REQUEST, TITLE, DETAIL)
-            .values(guild, request, title, detail)
+        return ctx.insertInto(this, GUILD, REQUEST, TITLE, DETAIL, TAGS)
+            .values(guild, request, title, detail, tags as Array<String?>?)
             .returning()
             .fetchOne()
     }
@@ -130,6 +130,23 @@ suspend fun fetchRequestFull(guild: Long, request: Int) = coroutineScope {
             .join(REQUEST_INFO)
             .on(REQUEST_INFO.GUILD.eq(GUILD), REQUEST_INFO.REQUEST.eq(ID))
             .where(ID.eq(request), GUILD.eq(guild))
+            .fetchOne()
+    }
+}
+
+suspend fun modifyRequestTags(guild: Long, id: Int, tags: Array<String>?) = coroutineScope {
+
+    with (REQUEST_INFO) {
+        ctx.update(this)
+            .set(TAGS,
+                if (tags == null || tags.isEmpty()) {
+                    null
+                } else {
+                    tags as Array<String?>
+                }
+            )
+            .where(GUILD.eq(guild), REQUEST.eq(id))
+            .returning()
             .fetchOne()
     }
 }
@@ -159,5 +176,65 @@ suspend fun setRequestState(guild: Long, request: Int, state: State) = coroutine
 fun fetchRequestInfo(guild: Long, request: Int): RequestInfoRecord? {
     with (REQUEST_INFO) {
         return ctx.fetchOne(this, GUILD.eq(guild), REQUEST.eq(request))
+    }
+}
+
+data class Filter(val conditions: List<Condition>, val fetchInfo: Boolean, val fetchSubscription: Boolean) {
+
+    fun<T : Record?> where(
+        step: SelectJoinStep<T>,
+        vararg conditions: Condition
+    ): SelectConditionStep<T> {
+
+        return step.where(this@Filter.conditions + conditions)
+    }
+
+    fun<T : Record?> filter(
+        step: SelectJoinStep<T>,
+        vararg conditions: Condition
+    ): SelectConditionStep<T> {
+
+        if (fetchInfo) {
+            joinInfo(step)
+        }
+
+        if (fetchSubscription) {
+            joinSubscription(step)
+        }
+
+        return step.where(this@Filter.conditions + conditions)
+    }
+
+    fun<T : Record?> joinInfo(step: SelectJoinStep<T>) = with (REQUEST) {
+        step.join(REQUEST_INFO).on(REQUEST_INFO.GUILD.eq(GUILD), REQUEST_INFO.REQUEST.eq(ID))
+    }
+
+    fun<T : Record?> joinSubscription(step: SelectJoinStep<T>) = with (REQUEST) {
+        step.join(SUBSCRIPTION).on(SUBSCRIPTION.GUILD.eq(GUILD), SUBSCRIPTION.REQUEST.eq(ID))
+    }
+
+    companion object {
+
+        fun build(keyword: String?, author: Long?, state: State?, subscribedBy: Long?): Filter {
+            with (REQUEST) {
+
+                val conditions = ArrayList<Condition>().apply {
+
+                    if (author != null)
+                        add(OWNER.eq(author))
+
+                    if (keyword != null)
+                        add(REQUEST_INFO.TITLE.like(keyword))
+
+                    if (state != null)
+                        add(REQUEST_INFO.STATE.eq(state))
+
+                    if (subscribedBy != null)
+                        add(SUBSCRIPTION.USER.eq(subscribedBy))
+                }
+
+                return Filter(conditions, state != null || keyword != null, subscribedBy != null)
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Member
 import utils.allowUser
 import utils.queueAsync
+import variables.NO_PERMISSIONS
 import variables.VIEW_PERMISSION
 
 class SubscriberService(val guild: Guild, val request: RequestRecord) {
@@ -23,4 +24,18 @@ class SubscriberService(val guild: Guild, val request: RequestRecord) {
 
         return this
     }
+
+    fun removeSubscriber(user: Member): RemovePayload {
+        val removed = database.removeSubscriber(user.idLong, guild.idLong, request.id!!)
+
+        return RemovePayload(removed != null) {
+            thread.manager.run {
+                allowUser(user.idLong, NO_PERMISSIONS, false)
+
+                queue()
+            }
+        }
+    }
+
+    data class RemovePayload(val success: Boolean, val updater: () -> Unit)
 }

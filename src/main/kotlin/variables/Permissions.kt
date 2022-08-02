@@ -12,10 +12,11 @@ val OPENING_PERMISSIONS = Permission.getRaw(
     Permission.MESSAGE_ATTACH_FILES,
     Permission.MESSAGE_EXT_EMOJI,
     Permission.MESSAGE_EXT_STICKER,
-    Permission.MESSAGE_HISTORY,
     Permission.USE_APPLICATION_COMMANDS,
+    Permission.MESSAGE_HISTORY,
 )
 
 val VIEW_PERMISSION = Permission.getRaw(
     Permission.VIEW_CHANNEL,
+    Permission.MESSAGE_HISTORY,
 )

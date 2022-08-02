@@ -19,5 +19,5 @@ val serviceThread = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
  * For cleaning listeners
  */
 val cacheThread = Scheduler.forScheduledExecutorService(
-    ScheduledThreadPoolExecutor(10)
+    ScheduledThreadPoolExecutor(5)
 )

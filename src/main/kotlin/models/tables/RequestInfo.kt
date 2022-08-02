@@ -19,7 +19,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row5
+import org.jooq.Row6
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -90,6 +90,11 @@ open class RequestInfo(
      */
     val STATE: TableField<RequestInfoRecord, State?> = createField(DSL.name("state"), SQLDataType.VARCHAR.nullable(false).defaultValue(DSL.field("'opening'::state", SQLDataType.VARCHAR)).asEnumDataType(models.enums.State::class.java), this, "")
 
+    /**
+     * The column <code>public.request_info.tags</code>.
+     */
+    val TAGS: TableField<RequestInfoRecord, Array<String?>?> = createField(DSL.name("tags"), SQLDataType.VARCHAR(20).getArrayDataType(), this, "")
+
     private constructor(alias: Name, aliased: Table<RequestInfoRecord>?): this(alias, null, null, aliased, null)
     private constructor(alias: Name, aliased: Table<RequestInfoRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, aliased, parameters)
 
@@ -147,18 +152,18 @@ open class RequestInfo(
     override fun rename(name: Table<*>): RequestInfo = RequestInfo(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row5 type methods
+    // Row6 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row5<Long?, Int?, String?, String?, State?> = super.fieldsRow() as Row5<Long?, Int?, String?, String?, State?>
+    override fun fieldsRow(): Row6<Long?, Int?, String?, String?, State?, Array<String?>?> = super.fieldsRow() as Row6<Long?, Int?, String?, String?, State?, Array<String?>?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (Long?, Int?, String?, String?, State?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (Long?, Int?, String?, String?, State?, Array<String?>?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (Long?, Int?, String?, String?, State?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (Long?, Int?, String?, String?, State?, Array<String?>?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }
