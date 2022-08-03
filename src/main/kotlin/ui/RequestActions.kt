@@ -51,7 +51,7 @@ val RequestActions = element(::Props) {
                 color = Color.GREEN
             )
 
-            + RowLayout() -{
+            + RowLayout {
                 if (canModifyState)
                     + menu(
                         id = onChangeState,

@@ -17,11 +17,11 @@ import utils.parseTags
 import java.awt.Color
 
 val CreateRequestModal by Delegate {
-    pool.next(onSubmit)
+    pool.next()
 }
 
-private val pool = ModalPool.multi(
-    modal("Create a Request") {
+private val pool = ModalPool.fixed(
+    creator = modal("Create a Request") {
         + Row(
             input(
                 id = "title",
@@ -49,9 +49,7 @@ private val pool = ModalPool.multi(
             )
         )
     }
-)
-
-private val onSubmit = pool.listen { event ->
+) { event ->
     val guild = event.guild!!
 
     event.deferReply(true).queue { hook ->

@@ -1,25 +1,26 @@
 package commands.todo
 
-import bjda.plugins.supercommand.CommandHandler
-import bjda.plugins.supercommand.SuperCommand
 import bjda.plugins.supercommand.SuperCommandGroup
+import bjda.plugins.supercommand.command
 import bjda.ui.core.*
 import bjda.ui.utils.UIStore
-import commands.todo.getTranslation
 import database.getTodosAsync
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import ui.TodoApp
 
 val TodoCommands = SuperCommandGroup.create(
-    "todo", "Todo Commands",
-    CreateTodo()
-)
+    "todo", "Todo Commands"
+) {
+    command(
+        CreateTodo()
+    )
+}
 
 val todoStore = UIStore<User>()
 
-private class CreateTodo: SuperCommand(name = "create", description = "Create a Todo List") {
-    override val run: CommandHandler = {
+fun CreateTodo() = command(name = "create", description = "Create a Todo List") {
+    execute {
         val language = getTranslation(event.userLocale)
 
         event.replyAsync(todoStore) { update ->

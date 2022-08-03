@@ -95,9 +95,9 @@ val RequestsList = component(::RequestsListProps) {
             }
         }
 
-        + requests.map { pair ->
+        - requests.map { pair ->
             Item(pair)
-        }.convert()
+        }
 
         + Row(
             Button.primary(onPrev, "<-", disabled = offset < MAX_REQUESTS),

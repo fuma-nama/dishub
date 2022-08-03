@@ -81,9 +81,7 @@ class CreateRequestService(val guild: Guild): Service {
             this.info = info
         }
 
-        return thread.editMessageById(request.headerMessage!!, ui.buildMessage().also {
-            println(it.embeds)
-        })
+        return thread.editMessageById(request.headerMessage!!, ui.buildMessage())
     }
 }
 

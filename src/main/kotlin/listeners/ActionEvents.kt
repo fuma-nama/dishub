@@ -129,18 +129,15 @@ class ActionEvents: Listener, EventCoroutine {
                     hook.editOriginal(ui.buildMessage()).queue()
                 }
             }
-            Open_Edit -> {
+            Open_Edit, Open_Modify_Tags -> {
+
                 val info = fetchRequestInfo(guild.idLong, id)
                     ?: return event.error("Request doesn't exists")
 
-                val modal = EditRequestModal(id, info)
-                event.replyModal(modal).queue()
-            }
-            Open_Modify_Tags -> {
-                val info = fetchRequestInfo(guild.idLong, id)
-                    ?: return event.error("Request doesn't exists")
-
-                val modal = ModifyTagsModal(id, info)
+                val modal = when (method) {
+                    Open_Modify_Tags -> ModifyTagsModal(id, info)
+                    else -> EditRequestModal(id, info)
+                }
 
                 event.replyModal(modal).queue()
             }
