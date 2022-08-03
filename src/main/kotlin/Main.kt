@@ -9,9 +9,7 @@ import org.jooq.DSLContext
 import org.jooq.SQLDialect
 import org.jooq.impl.DSL
 import commands.todo.TodoCommands
-import console.start
 import listeners.AllEvents
-import token.TOKEN
 import java.net.URI
 import java.net.URISyntaxException
 import java.sql.Connection
@@ -21,7 +19,7 @@ import java.sql.SQLException
 val ctx: DSLContext = DSL.using(getConnection(), SQLDialect.POSTGRES)
 
 fun main() {
-    val jda = JDABuilder.createDefault(TOKEN)
+    val jda = JDABuilder.createDefault(System.getenv("TOKEN"))
         .build()
         .awaitReady()
 
@@ -38,10 +36,6 @@ fun main() {
             UIEventModule(),
         )
     }
-
-    Thread {
-        start()
-    }.start()
 }
 
 @Throws(URISyntaxException::class, SQLException::class)

@@ -1,8 +1,11 @@
 package database
 
 import ctx
+import kotlinx.coroutines.coroutineScope
 import org.jooq.Record
 import org.jooq.ResultQuery
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import models.tables.references.TODO as todo
 
 fun saveTodos(user: Long, todos: Array<String?>) {
@@ -21,13 +24,13 @@ fun getTodos(user: Long): ArrayList<String>? {
         }
 }
 
-fun getTodosAsync(user: Long, accept: (ArrayList<String>?) -> Unit) {
+suspend fun getTodosAsync(user: Long) = suspendCoroutine { cont ->
     ctx.selectFrom(todo)
         .where(todo.USER.eq(user))
-        .fetchOneAsync(accept) {
-            it.content?.let {todos ->
-                arrayListOf(*todos) as ArrayList<String>
-            }
+        .fetchAsync().thenAccept {
+            val todos = it.firstOrNull()?.content
+
+            cont.resume(todos)
         }
 }
 

@@ -14,7 +14,6 @@ import bjda.ui.component.row.Row
 import bjda.ui.component.row.RowLayout
 import bjda.ui.core.Component
 import bjda.ui.core.IProps
-import bjda.ui.core.minus
 import bjda.ui.core.rangeTo
 import bjda.ui.types.Children
 import bjda.utils.Translation
@@ -25,19 +24,19 @@ import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle
 
-class TodoApp(initialTodos: ArrayList<String>?, val lang: Translation) : Component<TodoApp.Props>(Props()) {
+class TodoApp(initialTodos: MutableList<String>, val lang: Translation) : Component<TodoApp.Props>(Props()) {
     class Props : IProps() {
         lateinit var owner: User
     }
 
     private val state = useState(
         State(
-            todos = initialTodos?: ArrayList()
+            todos = initialTodos
         )
     )
 
     data class State(
-        val todos: ArrayList<String>,
+        val todos: MutableList<String>,
         var selected: Int? = null
     )
 
@@ -59,8 +58,6 @@ class TodoApp(initialTodos: ArrayList<String>?, val lang: Translation) : Compone
 
     override fun onUnmount() {
         val owner = props.owner
-        todoStore.remove(owner)
-
         val (todos) = state.get()
 
         saveTodos(owner.idLong, todos.toTypedArray())
@@ -68,8 +65,7 @@ class TodoApp(initialTodos: ArrayList<String>?, val lang: Translation) : Compone
 
     private val onClose by onClick { event ->
         event.deferEdit().queue {
-
-            ui.destroy()
+            todoStore.invalidate(props.owner)
         }
     }
 
@@ -178,15 +174,6 @@ class TodoApp(initialTodos: ArrayList<String>?, val lang: Translation) : Compone
                     label = lang("form")["new_content"]
                     value = todos[selected!!]
                     style = TextInputStyle.PARAGRAPH
-                }
-            }
-            + Row {
-                + Menu("test") {
-                    placeholder = "Select a Item"
-                    options = createOptions(
-                        selected = null,
-                        "Example" to "example"
-                    )
                 }
             }
         }

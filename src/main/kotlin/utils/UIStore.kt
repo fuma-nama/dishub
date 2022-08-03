@@ -11,8 +11,8 @@ fun<K> CacheMap(): Cache<K, UI> {
     return Caffeine.newBuilder()
         .maximumSize(200000)
         .scheduler(cacheThread)
-        .expireAfterWrite(10, TimeUnit.MINUTES)
-        .removalListener<K, UI> { _, ui, _ ->
+        .expireAfterAccess(10, TimeUnit.MINUTES)
+        .removalListener<K, UI> { _, ui, cause ->
             ui?.destroy()
         }
         .build()
