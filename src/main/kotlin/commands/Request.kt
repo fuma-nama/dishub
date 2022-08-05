@@ -151,7 +151,7 @@ fun List() = dishubCommand("list", "List all requests") {
 fun Create() = dishubCommand("create", "Create a new Request") {
 
     execute {
-        println("dddd")
+        
         try {
             event.replyModal(CreateRequestModal).queue()
         } catch (e: Exception) {
