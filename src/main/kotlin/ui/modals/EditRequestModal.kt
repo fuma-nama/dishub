@@ -1,6 +1,6 @@
 package ui.modals
 
-import bjda.plugins.ui.modal.modal
+import bjda.ui.modal.modal
 import bjda.ui.component.action.TextField.Companion.input
 import bjda.ui.component.row.Row
 import listeners.ActionEvents

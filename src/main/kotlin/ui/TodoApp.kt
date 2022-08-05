@@ -2,13 +2,12 @@ package ui
 
 import bjda.plugins.ui.hook.ButtonClick.Companion.onClick
 import bjda.plugins.ui.hook.MenuSelect.Companion.onSelect
-import bjda.plugins.ui.modal.Form.Companion.form
-import bjda.plugins.ui.modal.value
+import bjda.ui.modal.Form.Companion.form
+import bjda.ui.modal.value
 import bjda.ui.component.Text
 import bjda.ui.component.TextType
 import bjda.ui.component.action.Button
 import bjda.ui.component.action.Menu
-import bjda.ui.component.action.Menu.Companion.createOptions
 import bjda.ui.component.action.TextField
 import bjda.ui.component.row.Row
 import bjda.ui.component.row.RowLayout

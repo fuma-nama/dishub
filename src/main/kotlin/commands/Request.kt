@@ -8,7 +8,8 @@ import bjda.utils.embed
 import database.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import listeners.openRequest
+import listeners.handler.request.RequestOpenHandler
+import listeners.handler.request.RequestOpenHandler.Companion.openRequest
 import service.request.DeleteRequestService
 import service.GuildSettingsService
 import service.request.SubscriberService
@@ -29,15 +30,17 @@ val RequestCommands = create(
 }
 
 fun Open() = command("open", "Open and Subscribe to the Request") {
-    val scope = CoroutineScope(eventThread)
+    val scope = EventCoroutine.create()
 
     val request = int("request", "The request Id to open") {
         required()
     }
 
     execute {
-        scope.launch {
-            openRequest(request(), event)
+        event.guild?: return@execute event.error(NO_GUILD)
+
+        scope.laterReply(event, true) { hook ->
+            openRequest(request(), event, hook)
         }
     }
 }

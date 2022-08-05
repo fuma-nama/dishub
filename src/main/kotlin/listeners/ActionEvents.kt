@@ -1,89 +1,33 @@
 package listeners
 
-import bjda.ui.core.UIOnce.Companion.buildMessage
-import database.fetchRequestFull
 import database.fetchRequestInfo
+import listeners.handler.IModalHandler
+import listeners.handler.action.ChangeStateHandler
+import listeners.handler.action.ModifyTagsHandler
+import listeners.handler.action.RequestEditHandler
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent
-import service.GuildSettingsService
-import service.request.UpdateRequestService
 import ui.modals.EditRequestModal
 import ui.modals.ModifyTagsModal
-import ui.modals.get
-import ui.modals.value
-import ui.panel.RequestUpdatePanel
-import ui.panel.StateChangePanel
 import utils.*
 import variables.NO_GUILD
-import variables.RequestState
 
 class ActionEvents: Listener, EventCoroutine {
     override val prefix = ActionEvents.prefix
+    private val handlers = mapOf(
+        Change_State to ChangeStateHandler(),
+    )
+
+    private val modalHandlers = mapOf<String, IModalHandler<*>>(
+        Edit to RequestEditHandler(),
+        Modify_Tags to ModifyTagsHandler()
+    )
 
     override fun onEvent(data: List<String>, event: ModalInteractionEvent) {
         val guild = event.guild?: return event.error(NO_GUILD)
         val (method, id) = data.parse()
 
-        when (method) {
-            Edit -> event.later { hook ->
-                val (request, info) = fetchRequestFull(guild.idLong, id)
-                    ?: run {
-                        event.error("Request doesn't exists")
-
-                        return@later
-                    }
-
-                if (!request.canEditRequest(event.member!!)) {
-
-                    return@later event.error(
-                        noPermissions("edit request", "Author")
-                    )
-                }
-
-                UpdateRequestService(guild, request, info).run {
-                    val pair = updateRequest(
-                        event.value("title"), event.value("detail")
-                    )
-
-                    if (pair == null) {
-                        hook.error("Failed to edit request")
-
-                        return@later
-                    }
-
-                    updateHeader().queueAsync()
-
-                    val ui = RequestUpdatePanel(event.user, pair)
-
-                    hook.editOriginal(ui.buildMessage()).queue()
-                }
-            }
-
-            Modify_Tags -> event.later { hook ->
-                val (request, info) = fetchRequestFull(guild.idLong, id)
-                    ?: run {
-                        event.error("Request doesn't exists")
-
-                        return@later
-                    }
-                val tags = parseTags(event["tags"])
-
-                UpdateRequestService(guild, request, info).run update@ {
-                    val pair = updateTags(tags)?: run {
-                        hook.error("Failed to update Tags")
-
-                        return@update
-                    }
-
-                    updateHeader().queueAsync()
-
-                    val ui = RequestUpdatePanel(event.user, pair)
-
-                    hook.editOriginal(ui.buildMessage()).queue()
-                }
-            }
-        }
+        modalHandlers[method]?.call(event, guild, id)
     }
 
     override fun onEvent(data: List<String>, event: GenericComponentInteractionCreateEvent) {
@@ -91,44 +35,6 @@ class ActionEvents: Listener, EventCoroutine {
         val (method, id) = data.parse()
 
         when (method) {
-            Change_State -> {
-                event as SelectMenuInteractionEvent
-                val selected = RequestState.valueOf(event.values[0])
-
-                event.later { hook ->
-                    val (request, info) = fetchRequestFull(guild.idLong, id)
-                        ?: run {
-                            event.error("Request doesn't exists")
-
-                            return@later
-                        }
-
-                    val service = UpdateRequestService(guild, request, info)
-                    val config = GuildSettingsService(guild).getOrInit()
-
-                    if (!config.canModifyState(guild, event.member!!)) {
-                        hook.error(noPermissions("change request state"))
-
-                        return@later
-                    }
-
-                    if (selected.state != info.state) {
-
-                        service.run {
-                            if (updateState(selected.state)) {
-
-                                (updateHeader() + updatePermissions()).queueAsync()
-                            } else {
-                                return@later hook.error("Failed to update State")
-                            }
-                        }
-                    }
-
-                    val ui = StateChangePanel(selected, event.user)
-
-                    hook.editOriginal(ui.buildMessage()).queue()
-                }
-            }
             Open_Edit, Open_Modify_Tags -> {
 
                 val info = fetchRequestInfo(guild.idLong, id)
@@ -140,6 +46,10 @@ class ActionEvents: Listener, EventCoroutine {
                 }
 
                 event.replyModal(modal).queue()
+            }
+
+            else -> {
+                handlers[method]?.call(event, guild, id)
             }
         }
     }

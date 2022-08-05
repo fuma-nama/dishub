@@ -3,7 +3,7 @@ import bjda.plugins.supercommand.SuperCommandModule
 import bjda.plugins.ui.UIEventModule
 import commands.SettingsCommands
 import commands.RequestCommands
-import commands.thread.ThreadCommands
+import commands.ThreadCommands
 import net.dv8tion.jda.api.JDABuilder
 import org.jooq.DSLContext
 import org.jooq.SQLDialect

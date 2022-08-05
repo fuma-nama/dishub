@@ -5,6 +5,9 @@ import com.varabyte.kotter.foundation.session
 import com.varabyte.kotter.foundation.text.textLine
 import kotlinx.coroutines.delay
 
+/**
+ * Used for debug
+ */
 fun start() = session {
 
     section {
@@ -20,8 +23,4 @@ fun start() = session {
             rerender()
         }
     }
-}
-
-fun main() {
-    start()
 }

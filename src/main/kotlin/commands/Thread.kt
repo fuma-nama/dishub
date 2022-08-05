@@ -1,4 +1,4 @@
-package commands.thread
+package commands
 
 import bjda.plugins.supercommand.CommandHandler
 import bjda.plugins.supercommand.SuperCommand
