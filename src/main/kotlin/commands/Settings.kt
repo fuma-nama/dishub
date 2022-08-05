@@ -18,7 +18,7 @@ val SettingsCommands = SuperCommandGroup.create(
 )
 
 class Manager : SuperCommand(
-    name = "manager", description = "Set the Manager Role"
+    name = "manager", description = "Set the Manager Role", guildOnly = true
 ) {
     val manager = role("role", "The Role to be the manager")
         .required(true)
@@ -42,7 +42,7 @@ class Manager : SuperCommand(
 
 
 class Container : SuperCommand(
-    name = "container", description = "Change the container of requests"
+    name = "container", description = "Change the container of requests", guildOnly = true
 ) {
     val container = channel<Category>(
         "container",

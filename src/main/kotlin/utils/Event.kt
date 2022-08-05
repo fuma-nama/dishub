@@ -1,14 +1,22 @@
 package utils
 
+import bjda.plugins.supercommand.SuperCommand
+import bjda.plugins.supercommand.SuperCommandBuilder
+import bjda.plugins.supercommand.SuperCommandImpl
+import bjda.plugins.supercommand.command
+import bjda.plugins.supercommand.entries.SuperNode
 import bjda.plugins.ui.hook.ButtonClick
 import bjda.plugins.ui.hook.MenuSelect
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed
+import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenuInteraction
 import java.awt.Color
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 infix fun IReplyCallback.error(message: MessageEmbed) {
@@ -54,4 +62,22 @@ fun onSelectStatic(id: String, handler: (event: SelectMenuInteraction) -> Unit):
 fun onClickStatic(id: String, handler: (event: ButtonInteraction) -> Unit): String {
     ButtonClick(id, handler).listen()
     return id
+}
+
+fun dishubCommand(
+    name: String,
+    description: String,
+    init: SuperCommandBuilder.() -> Unit
+): SuperCommand {
+    val cmdImpl = command(name, description, true, init = init) as SuperCommandImpl
+
+    return cmdImpl.apply {
+        run = run@ {
+            event.verify {
+                return@run
+            }
+
+            run(this)
+        }
+    }
 }

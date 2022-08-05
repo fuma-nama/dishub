@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import ui.panel.NavigatePanel
 import ui.panel.ReferencePanel
+import utils.EventCoroutine
 import utils.error
 import utils.queueAsync
 import variables.NO_GUILD
@@ -19,7 +20,11 @@ val ThreadCommands = SuperCommandGroup.create(
     Navigate(), Reference()
 )
 
-private class Reference: SuperCommand(name = "reference", description = "mention another request thread"), CoroutineScope {
+private class Reference: SuperCommand(
+    name = "reference",
+    description = "mention another request thread",
+    guildOnly = true
+), CoroutineScope {
     override val coroutineContext = eventThread
 
     val request = int("request", "The Request Id to reference")
@@ -44,31 +49,27 @@ private class Reference: SuperCommand(name = "reference", description = "mention
     }
 }
 
-private class Navigate: SuperCommand(name = "nav", description = "A navigate bar to jump to header or bottom"), CoroutineScope {
-    override val coroutineContext = eventThread
+private class Navigate: SuperCommand(name = "nav", description = "A navigate bar to jump to header or bottom"), EventCoroutine {
 
     override val run: CommandHandler = {
 
-        event.deferReply(true).queue { hook ->
-            launch {
+        event.later(true) { hook ->
+            val first = event.channel.getHistoryFromBeginning(1)
+                .queueAsync()
+                .retrievedHistory
+                .firstOrNull()
 
-                val first = event.channel.getHistoryFromBeginning(1)
-                    .queueAsync()
-                    .retrievedHistory
-                    .firstOrNull()
+            val last = event.channel.history.retrievePast(1)
+                .queueAsync()
+                .firstOrNull()
 
-                val last = event.channel.history.retrievePast(1)
-                    .queueAsync()
-                    .firstOrNull()
+            if (first == null || last == null) {
+                hook.error("Message Not Found")
+            } else {
 
-                if (first == null || last == null) {
-                    hook.error("Message Not Found")
-                } else {
+                val ui = NavigatePanel(first.jumpUrl, last.jumpUrl).buildMessage()
 
-                    val ui = NavigatePanel(first.jumpUrl, last.jumpUrl).buildMessage()
-
-                    hook.editOriginal(ui).queue()
-                }
+                hook.editOriginal(ui).queue()
             }
         }
     }

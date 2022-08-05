@@ -5,7 +5,11 @@ import models.tables.records.RequestRecord
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.Member
+import net.dv8tion.jda.api.interactions.Interaction
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
 import net.dv8tion.jda.api.managers.channel.attribute.IPermissionContainerManager
+import variables.MISSING_PERMISSIONS
+import variables.NO_GUILD
 import variables.NO_PERMISSIONS
 
 val Guild.everyone: Long
@@ -57,4 +61,27 @@ fun Member.isManager(manager: Long?): Boolean {
     return manager != null && roles.any { role ->
         role.idLong == manager
     }
+}
+
+/**
+ * Calls onError function when:
+ *
+ * 1. Guild is null
+ * 2. Permissions are missing
+ */
+inline fun IReplyCallback.verify(onError: () -> Unit) {
+
+    if (guild == null) {
+        this.error(NO_GUILD)
+        return onError()
+    }
+
+    if (missingPermission()) {
+        this.error(MISSING_PERMISSIONS)
+        return onError()
+    }
+}
+
+fun Interaction.missingPermission(): Boolean {
+    return !guild!!.getMemberById(jda.selfUser.id)!!.hasPermission(Permission.ADMINISTRATOR)
 }

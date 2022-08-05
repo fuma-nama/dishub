@@ -2,11 +2,9 @@ package commands
 
 import bjda.plugins.supercommand.IOptionValue.Companion.choice
 import bjda.plugins.supercommand.SuperCommandGroup.Companion.create
-import bjda.plugins.supercommand.command
 import bjda.ui.core.UI
 import bjda.utils.embed
 import database.*
-import listeners.handler.request.RequestOpenHandler.Companion.openRequest
 import listeners.handler.request.RequestOpenHandler.Companion.openRequestByDisplayId
 import service.request.DeleteRequestService
 import service.GuildSettingsService
@@ -17,7 +15,6 @@ import ui.panel.Requests
 import ui.panel.RequestsList
 import ui.panel.UnsubscribedPanel
 import utils.*
-import variables.NO_GUILD
 import variables.RequestState
 
 val RequestCommands = create(
@@ -26,7 +23,7 @@ val RequestCommands = create(
     command(Open(), Close(), Create(), Delete(), List())
 }
 
-fun Open() = command("open", "Open and Subscribe to the Request") {
+fun Open() = dishubCommand("open", "Open and Subscribe to the Request") {
     val scope = EventCoroutine.create()
 
     val request = long("request", "The request Id to open")
@@ -34,7 +31,6 @@ fun Open() = command("open", "Open and Subscribe to the Request") {
         .map { it.toInt() }
 
     execute {
-        event.guild?: return@execute event.error(NO_GUILD)
 
         scope.laterReply(event, true) { hook ->
             openRequestByDisplayId(request(), event, hook)
@@ -42,7 +38,7 @@ fun Open() = command("open", "Open and Subscribe to the Request") {
     }
 }
 
-fun Close() = command("close", "Close and Unsubscribe the current request") {
+fun Close() = dishubCommand("close", "Close and Unsubscribe the current request") {
     val scope = EventCoroutine.create()
     val id = long("request", "The ID of request to be closed")
         .optional()
@@ -50,8 +46,7 @@ fun Close() = command("close", "Close and Unsubscribe the current request") {
 
     execute {
         val displayId = id()
-        val guild = event.guild
-            ?: return@execute event.error(NO_GUILD)
+        val guild = event.guild!!
 
         scope.laterReply(event, true) { hook ->
             val request = if (displayId == null) {
@@ -83,7 +78,7 @@ fun Close() = command("close", "Close and Unsubscribe the current request") {
     }
 }
 
-fun List() = command("list", "List all requests") {
+fun List() = dishubCommand("list", "List all requests") {
     val scope = EventCoroutine.create()
 
     val search = text("search", "Keyword to search request")
@@ -109,8 +104,7 @@ fun List() = command("list", "List all requests") {
         .optional { false }
 
     execute {
-        val guild = event.guild
-            ?: return@execute event.error(NO_GUILD)
+        val guild = event.guild!!
 
         val filter = Filter.build(
             author = author()?.idLong,
@@ -154,24 +148,21 @@ fun List() = command("list", "List all requests") {
     }
 }
 
-fun Create() = command("create", "Create a new Request") {
+fun Create() = dishubCommand("create", "Create a new Request") {
 
     execute {
-        event.guild?: return@execute event.error(NO_GUILD)
-
         event.replyModal(CreateRequestModal).queue()
     }
 }
 
-fun Delete() = command("delete", "Delete current request") {
+fun Delete() = dishubCommand("delete", "Delete current request") {
     val scope = EventCoroutine.create()
 
     val id = long("request", "The request Id")
         .optional()
 
     execute {
-        val guild = event.guild
-            ?: return@execute event.error(NO_GUILD)
+        val guild = event.guild!!
 
         scope.laterReply(event, true) { hook ->
             val settings = GuildSettingsService(guild).getOrInit()
