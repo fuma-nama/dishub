@@ -17,7 +17,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: state; Type: TYPE; Schema: public; Owner: postgres
+-- Name: state; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.state AS ENUM (
@@ -27,14 +27,12 @@ CREATE TYPE public.state AS ENUM (
 );
 
 
-ALTER TYPE public.state OWNER TO postgres;
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: guild; Type: TABLE; Schema: public; Owner: postgres
+-- Name: guild; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.guild (
@@ -44,10 +42,8 @@ CREATE TABLE public.guild (
 );
 
 
-ALTER TABLE public.guild OWNER TO postgres;
-
 --
--- Name: request; Type: TABLE; Schema: public; Owner: postgres
+-- Name: request; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.request (
@@ -61,10 +57,8 @@ CREATE TABLE public.request (
 );
 
 
-ALTER TABLE public.request OWNER TO postgres;
-
 --
--- Name: request_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: request_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.request_id_seq
@@ -76,17 +70,15 @@ CREATE SEQUENCE public.request_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.request_id_seq OWNER TO postgres;
-
 --
--- Name: request_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: request_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.request_id_seq OWNED BY public.request.id;
 
 
 --
--- Name: request_info; Type: TABLE; Schema: public; Owner: postgres
+-- Name: request_info; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.request_info (
@@ -98,10 +90,8 @@ CREATE TABLE public.request_info (
 );
 
 
-ALTER TABLE public.request_info OWNER TO postgres;
-
 --
--- Name: subscription; Type: TABLE; Schema: public; Owner: postgres
+-- Name: subscription; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.subscription (
@@ -110,10 +100,8 @@ CREATE TABLE public.subscription (
 );
 
 
-ALTER TABLE public.subscription OWNER TO postgres;
-
 --
--- Name: todo; Type: TABLE; Schema: public; Owner: postgres
+-- Name: todo; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.todo (
@@ -122,17 +110,15 @@ CREATE TABLE public.todo (
 );
 
 
-ALTER TABLE public.todo OWNER TO postgres;
-
 --
--- Name: request id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: request id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.request ALTER COLUMN id SET DEFAULT nextval('public.request_id_seq'::regclass);
 
 
 --
--- Name: guild key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: guild key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.guild
@@ -140,7 +126,7 @@ ALTER TABLE ONLY public.guild
 
 
 --
--- Name: request request_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: request request_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.request
@@ -148,7 +134,7 @@ ALTER TABLE ONLY public.request
 
 
 --
--- Name: subscription subscription_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: subscription subscription_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.subscription
@@ -156,7 +142,7 @@ ALTER TABLE ONLY public.subscription
 
 
 --
--- Name: request_info table_name_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: request_info table_name_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.request_info
@@ -164,7 +150,7 @@ ALTER TABLE ONLY public.request_info
 
 
 --
--- Name: todo todo_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: todo todo_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.todo
