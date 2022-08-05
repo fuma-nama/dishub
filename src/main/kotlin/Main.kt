@@ -1,6 +1,7 @@
 import bjda.BJDA
 import bjda.plugins.supercommand.SuperCommandModule
 import bjda.plugins.ui.UIEventModule
+import commands.HelpCommand
 import commands.SettingsCommands
 import commands.RequestCommands
 import commands.ThreadCommands
@@ -31,7 +32,8 @@ fun main() {
                 TodoCommands,
                 RequestCommands,
                 ThreadCommands,
-                SettingsCommands
+                SettingsCommands,
+                HelpCommand
             ),
             UIEventModule(),
         )
