@@ -14,7 +14,7 @@ class SubscriberService(val guild: Guild, val request: RequestRecord) {
     }
 
     suspend fun addSubscriber(user: Member): SubscriberService {
-        database.addSubscriber(user.idLong, guild.idLong, request.id!!)
+        database.addSubscriber(user.idLong, request.id!!)
 
         thread.manager.apply {
             allowUser(user.idLong, VIEW_PERMISSION, false)
@@ -26,7 +26,7 @@ class SubscriberService(val guild: Guild, val request: RequestRecord) {
     }
 
     fun removeSubscriber(user: Member): RemovePayload {
-        val removed = database.removeSubscriber(user.idLong, guild.idLong, request.id!!)
+        val removed = database.removeSubscriber(user.idLong, request.id!!)
 
         return RemovePayload(removed != null) {
             thread.manager.run {

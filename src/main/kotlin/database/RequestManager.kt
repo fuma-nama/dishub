@@ -10,18 +10,25 @@ import models.tables.references.REQUEST
 import models.tables.references.REQUEST_INFO
 import models.tables.references.SUBSCRIPTION
 import org.jooq.*
+import org.jooq.impl.DSL.*
 import ui.panel.MAX_REQUESTS
 
 /**
  * Insert a new request
- *
+ *SELECT coalesce(max("itemNumber"),0) + 1
+FROM "OrderItem"
+WHERE "orderId"=3)
  * @return Created request id
  */
 fun addRequest(guild: Long, owner: Long, thread: Long, message: Long): RequestRecord? {
     with (REQUEST) {
 
-        return ctx.insertInto(this, GUILD, OWNER, THREAD, HEADER_MESSAGE)
-            .values(guild, owner, thread, message)
+        val nextDisplayId = select(coalesce(max(DISPLAY_ID)).plus(1))
+            .from(this)
+            .where(GUILD.eq(guild))
+
+        return ctx.insertInto(this, GUILD, OWNER, THREAD, HEADER_MESSAGE, DISPLAY_ID)
+            .values( `val`(guild), `val`(owner), `val`(thread), `val`(message), nextDisplayId.asField())
             .returning()
             .fetchOne()
     }
@@ -67,11 +74,18 @@ fun countRequest(guild: Long, filter: Filter): Int? {
     }
 }
 
-fun getRequest(guild: Long, id: Int): RequestRecord? {
+fun getRequest(id: Int): RequestRecord? {
     with (REQUEST) {
-        return ctx.fetchOne(this, GUILD.eq(guild),ID.eq(id))
+        return ctx.fetchOne(this, ID.eq(id))
     }
 }
+
+fun getRequest(guild: Long, displayId: Int): RequestRecord? {
+    with (REQUEST) {
+        return ctx.fetchOne(this, GUILD.eq(guild), DISPLAY_ID.eq(displayId))
+    }
+}
+
 
 fun getRequestByThread(guild: Long, thread: Long): RequestRecord? {
     with (REQUEST) {
@@ -90,34 +104,34 @@ fun deleteRequest(guild: Long, request: Int, success: (RequestRecord) -> Unit) {
     }
 }
 
-fun addSubscriber(user: Long, guild: Long, request: Int) {
+fun addSubscriber(user: Long, request: Int) {
     with (SUBSCRIPTION) {
 
-        ctx.insertInto(this, USER, GUILD, REQUEST)
-            .values(user, guild, request)
+        ctx.insertInto(this, USER, REQUEST)
+            .values(user, request)
             .onDuplicateKeyIgnore()
             .execute()
     }
 }
 
-fun removeSubscriber(user: Long, guild: Long, request: Int): SubscriptionRecord? {
+fun removeSubscriber(user: Long, request: Int): SubscriptionRecord? {
     with (SUBSCRIPTION) {
 
         return ctx.delete(this)
-            .where(USER.eq(user), GUILD.eq(guild), REQUEST.eq(request))
+            .where(USER.eq(user), REQUEST.eq(request))
             .returning()
             .fetchOne()
     }
 }
 
 fun createInfo(request: RequestRecord, title: String, detail: String, tags: Array<String>?): RequestInfoRecord? {
-    return createInfo(request.guild!!, request.id!!, title, detail, tags)
+    return createInfo(request.id!!, title, detail, tags)
 }
 
-fun createInfo(guild: Long, request: Int, title: String, detail: String, tags: Array<String>?): RequestInfoRecord? {
+fun createInfo(request: Int, title: String, detail: String, tags: Array<String>?): RequestInfoRecord? {
     with (REQUEST_INFO) {
-        return ctx.insertInto(this, GUILD, REQUEST, TITLE, DETAIL, TAGS)
-            .values(guild, request, title, detail, tags as Array<String?>?)
+        return ctx.insertInto(this, REQUEST, TITLE, DETAIL, TAGS)
+            .values(request, title, detail, tags as Array<String?>?)
             .returning()
             .fetchOne()
     }
@@ -128,13 +142,13 @@ suspend fun fetchRequestFull(guild: Long, request: Int) = coroutineScope {
     with (REQUEST) {
         ctx.select(this, REQUEST_INFO).from(this)
             .join(REQUEST_INFO)
-            .on(REQUEST_INFO.GUILD.eq(GUILD), REQUEST_INFO.REQUEST.eq(ID))
+            .on(REQUEST_INFO.REQUEST.eq(ID))
             .where(ID.eq(request), GUILD.eq(guild))
             .fetchOne()
     }
 }
 
-suspend fun modifyRequestTags(guild: Long, id: Int, tags: Array<String>?) = coroutineScope {
+suspend fun modifyRequestTags(id: Int, tags: Array<String>?) = coroutineScope {
 
     with (REQUEST_INFO) {
         ctx.update(this)
@@ -145,37 +159,37 @@ suspend fun modifyRequestTags(guild: Long, id: Int, tags: Array<String>?) = coro
                     tags as Array<String?>
                 }
             )
-            .where(GUILD.eq(guild), REQUEST.eq(id))
+            .where(REQUEST.eq(id))
             .returning()
             .fetchOne()
     }
 }
 
-suspend fun editRequest(guild: Long, id: Int, title: String, detail: String) = coroutineScope {
+suspend fun editRequest(id: Int, title: String, detail: String) = coroutineScope {
     with (REQUEST_INFO) {
         ctx.update(this)
             .set(TITLE, title)
             .set(DETAIL, detail)
-            .where(GUILD.eq(guild), REQUEST.eq(id))
+            .where(REQUEST.eq(id))
             .returning()
             .fetchOne()
     }
 }
 
-suspend fun setRequestState(guild: Long, request: Int, state: State) = coroutineScope {
+suspend fun setRequestState(request: Int, state: State) = coroutineScope {
 
     with (REQUEST_INFO) {
         ctx.update(this)
             .set(STATE, state)
-            .where(GUILD.eq(guild), REQUEST.eq(request))
+            .where(REQUEST.eq(request))
             .returning()
             .fetchOne()
     }
 }
 
-fun fetchRequestInfo(guild: Long, request: Int): RequestInfoRecord? {
+fun fetchRequestInfo(request: Int): RequestInfoRecord? {
     with (REQUEST_INFO) {
-        return ctx.fetchOne(this, GUILD.eq(guild), REQUEST.eq(request))
+        return ctx.fetchOne(this, REQUEST.eq(request))
     }
 }
 
@@ -206,11 +220,11 @@ data class Filter(val conditions: List<Condition>, val fetchInfo: Boolean, val f
     }
 
     fun<T : Record?> joinInfo(step: SelectJoinStep<T>) = with (REQUEST) {
-        step.join(REQUEST_INFO).on(REQUEST_INFO.GUILD.eq(GUILD), REQUEST_INFO.REQUEST.eq(ID))
+        step.join(REQUEST_INFO).on(REQUEST_INFO.REQUEST.eq(ID))
     }
 
     fun<T : Record?> joinSubscription(step: SelectJoinStep<T>) = with (REQUEST) {
-        step.join(SUBSCRIPTION).on(SUBSCRIPTION.GUILD.eq(GUILD), SUBSCRIPTION.REQUEST.eq(ID))
+        step.join(SUBSCRIPTION).on(SUBSCRIPTION.REQUEST.eq(ID))
     }
 
     companion object {

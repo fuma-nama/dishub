@@ -48,7 +48,7 @@ class UpdateRequestService(val guild: Guild, var request: RequestRecord, var inf
     }
 
     suspend fun updateTags(tags: Array<String>?): Pair<RequestInfoRecord, RequestInfoRecord>? {
-        val updated = modifyRequestTags(guild.idLong, request.id!!, tags)
+        val updated = modifyRequestTags(request.id!!, tags)
             ?: return null
 
         val old = info
@@ -59,7 +59,7 @@ class UpdateRequestService(val guild: Guild, var request: RequestRecord, var inf
 
     suspend fun updateRequest(title: String, description: String): Pair<RequestInfoRecord, RequestInfoRecord>? {
         val updated = editRequest(
-            info.guild!!, info.request!!,
+            info.request!!,
             title, description
         )?: return null
 
@@ -70,7 +70,7 @@ class UpdateRequestService(val guild: Guild, var request: RequestRecord, var inf
     }
 
     suspend fun updateState(state: State): Boolean {
-        val updated = setRequestState(info.guild!!, info.request!!, state)?.also {
+        val updated = setRequestState(info.request!!, state)?.also {
             info = it
         }
 

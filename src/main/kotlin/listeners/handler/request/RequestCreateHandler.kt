@@ -27,7 +27,7 @@ class RequestCreateHandler : IModalHandler<Any>, EventCoroutine {
         CreateRequestService(guild).create(info) { request ->
             val ui = message {
                 embed(
-                    title = "Request Created: #${request.id}",
+                    title = "Request Created: #${request.displayId}",
                     description = "You may open request thread by the button below",
                     color = Color.GREEN
                 )

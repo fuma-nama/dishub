@@ -35,7 +35,7 @@ val RequestHeader = component(::RequestHeaderProps) {
         val state = RequestState.from(info.state!!);
 
         {
-            + Content("**Request #${request.id}**")
+            + Content("**Request #${request.displayId}**")
             + Embed()..{
                 title = info.title
                 description = info.detail

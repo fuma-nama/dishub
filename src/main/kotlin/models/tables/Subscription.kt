@@ -6,11 +6,8 @@ package models.tables
 
 import java.util.function.Function
 
-import kotlin.collections.List
-
 import models.Public
 import models.keys.SUBSCRIPTION_PK
-import models.keys.SUBSCRIPTION__SUBSCRIPTION_GUILD_REQUEST_FKEY
 import models.tables.records.SubscriptionRecord
 
 import org.jooq.Field
@@ -18,7 +15,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row3
+import org.jooq.Row2
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -70,11 +67,6 @@ open class Subscription(
     val USER: TableField<SubscriptionRecord, Long?> = createField(DSL.name("user"), SQLDataType.BIGINT.nullable(false), this, "")
 
     /**
-     * The column <code>public.subscription.guild</code>.
-     */
-    val GUILD: TableField<SubscriptionRecord, Long?> = createField(DSL.name("guild"), SQLDataType.BIGINT.nullable(false), this, "")
-
-    /**
      * The column <code>public.subscription.request</code>.
      */
     val REQUEST: TableField<SubscriptionRecord, Int?> = createField(DSL.name("request"), SQLDataType.INTEGER.nullable(false), this, "")
@@ -100,22 +92,6 @@ open class Subscription(
     constructor(child: Table<out Record>, key: ForeignKey<out Record, SubscriptionRecord>): this(Internal.createPathAlias(child, key), child, key, SUBSCRIPTION, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<SubscriptionRecord> = SUBSCRIPTION_PK
-    override fun getReferences(): List<ForeignKey<SubscriptionRecord, *>> = listOf(SUBSCRIPTION__SUBSCRIPTION_GUILD_REQUEST_FKEY)
-
-    private lateinit var _request: Request
-
-    /**
-     * Get the implicit join path to the <code>public.request</code> table.
-     */
-    fun request(): Request {
-        if (!this::_request.isInitialized)
-            _request = Request(this, SUBSCRIPTION__SUBSCRIPTION_GUILD_REQUEST_FKEY)
-
-        return _request;
-    }
-
-    val request: Request
-        get(): Request = request()
     override fun `as`(alias: String): Subscription = Subscription(DSL.name(alias), this)
     override fun `as`(alias: Name): Subscription = Subscription(alias, this)
     override fun `as`(alias: Table<*>): Subscription = Subscription(alias.getQualifiedName(), this)
@@ -136,18 +112,18 @@ open class Subscription(
     override fun rename(name: Table<*>): Subscription = Subscription(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row3 type methods
+    // Row2 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row3<Long?, Long?, Int?> = super.fieldsRow() as Row3<Long?, Long?, Int?>
+    override fun fieldsRow(): Row2<Long?, Int?> = super.fieldsRow() as Row2<Long?, Int?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (Long?, Long?, Int?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (Long?, Int?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (Long?, Long?, Int?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (Long?, Int?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

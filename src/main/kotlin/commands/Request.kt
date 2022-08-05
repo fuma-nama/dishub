@@ -6,10 +6,8 @@ import bjda.plugins.supercommand.command
 import bjda.ui.core.UI
 import bjda.utils.embed
 import database.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import listeners.handler.request.RequestOpenHandler
 import listeners.handler.request.RequestOpenHandler.Companion.openRequest
+import listeners.handler.request.RequestOpenHandler.Companion.openRequestByDisplayId
 import service.request.DeleteRequestService
 import service.GuildSettingsService
 import service.request.SubscriberService
@@ -21,7 +19,6 @@ import ui.panel.UnsubscribedPanel
 import utils.*
 import variables.NO_GUILD
 import variables.RequestState
-import variables.eventThread
 
 val RequestCommands = create(
     "request", "Call Dishub Request Features",
@@ -32,34 +29,35 @@ val RequestCommands = create(
 fun Open() = command("open", "Open and Subscribe to the Request") {
     val scope = EventCoroutine.create()
 
-    val request = int("request", "The request Id to open") {
-        required()
-    }
+    val request = long("request", "The request Id to open")
+        .required()
+        .map { it.toInt() }
 
     execute {
         event.guild?: return@execute event.error(NO_GUILD)
 
         scope.laterReply(event, true) { hook ->
-            openRequest(request(), event, hook)
+            openRequestByDisplayId(request(), event, hook)
         }
     }
 }
 
 fun Close() = command("close", "Close and Unsubscribe the current request") {
     val scope = EventCoroutine.create()
-    val id = int("request", "The ID of request to be closed")
+    val id = long("request", "The ID of request to be closed")
         .optional()
+        .map { it?.toInt() }
 
     execute {
-        val requestId = id()
+        val displayId = id()
         val guild = event.guild
             ?: return@execute event.error(NO_GUILD)
 
         scope.laterReply(event, true) { hook ->
-            val request = if (requestId == null) {
+            val request = if (displayId == null) {
                 getRequestByThread(guild.idLong, event.channel.idLong)
             } else {
-                getRequest(guild.idLong, requestId)
+                getRequest(guild.idLong, displayId)
             }
 
             request?: run {
@@ -74,7 +72,7 @@ fun Close() = command("close", "Close and Unsubscribe the current request") {
             if (payload.success) {
 
                 hook.editOriginalEmbeds(
-                    UnsubscribedPanel(request.id!!)
+                    UnsubscribedPanel(request.displayId!!)
                 ).queue {
                     payload.updater()
                 }

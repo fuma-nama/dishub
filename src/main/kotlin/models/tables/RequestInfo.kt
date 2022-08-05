@@ -6,11 +6,8 @@ package models.tables
 
 import java.util.function.Function
 
-import kotlin.collections.List
-
 import models.Public
 import models.enums.State
-import models.keys.REQUEST_INFO__REQUEST_HEADER_REQUEST_GUILD_ID_FK
 import models.keys.TABLE_NAME_PKEY
 import models.tables.records.RequestInfoRecord
 
@@ -19,7 +16,7 @@ import org.jooq.ForeignKey
 import org.jooq.Name
 import org.jooq.Record
 import org.jooq.Records
-import org.jooq.Row6
+import org.jooq.Row5
 import org.jooq.Schema
 import org.jooq.SelectField
 import org.jooq.Table
@@ -64,11 +61,6 @@ open class RequestInfo(
      * The class holding records for this type
      */
     override fun getRecordType(): Class<RequestInfoRecord> = RequestInfoRecord::class.java
-
-    /**
-     * The column <code>public.request_info.guild</code>.
-     */
-    val GUILD: TableField<RequestInfoRecord, Long?> = createField(DSL.name("guild"), SQLDataType.BIGINT.nullable(false), this, "")
 
     /**
      * The column <code>public.request_info.request</code>.
@@ -116,22 +108,6 @@ open class RequestInfo(
     constructor(child: Table<out Record>, key: ForeignKey<out Record, RequestInfoRecord>): this(Internal.createPathAlias(child, key), child, key, REQUEST_INFO, null)
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
     override fun getPrimaryKey(): UniqueKey<RequestInfoRecord> = TABLE_NAME_PKEY
-    override fun getReferences(): List<ForeignKey<RequestInfoRecord, *>> = listOf(REQUEST_INFO__REQUEST_HEADER_REQUEST_GUILD_ID_FK)
-
-    private lateinit var _request: Request
-
-    /**
-     * Get the implicit join path to the <code>public.request</code> table.
-     */
-    fun request(): Request {
-        if (!this::_request.isInitialized)
-            _request = Request(this, REQUEST_INFO__REQUEST_HEADER_REQUEST_GUILD_ID_FK)
-
-        return _request;
-    }
-
-    val request: Request
-        get(): Request = request()
     override fun `as`(alias: String): RequestInfo = RequestInfo(DSL.name(alias), this)
     override fun `as`(alias: Name): RequestInfo = RequestInfo(alias, this)
     override fun `as`(alias: Table<*>): RequestInfo = RequestInfo(alias.getQualifiedName(), this)
@@ -152,18 +128,18 @@ open class RequestInfo(
     override fun rename(name: Table<*>): RequestInfo = RequestInfo(name.getQualifiedName(), null)
 
     // -------------------------------------------------------------------------
-    // Row6 type methods
+    // Row5 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row6<Long?, Int?, String?, String?, State?, Array<String?>?> = super.fieldsRow() as Row6<Long?, Int?, String?, String?, State?, Array<String?>?>
+    override fun fieldsRow(): Row5<Int?, String?, String?, State?, Array<String?>?> = super.fieldsRow() as Row5<Int?, String?, String?, State?, Array<String?>?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (Long?, Int?, String?, String?, State?, Array<String?>?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (Int?, String?, String?, State?, Array<String?>?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (Long?, Int?, String?, String?, State?, Array<String?>?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (Int?, String?, String?, State?, Array<String?>?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

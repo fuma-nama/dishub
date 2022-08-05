@@ -37,7 +37,7 @@ class ActionEvents: Listener, EventCoroutine {
         when (method) {
             Open_Edit, Open_Modify_Tags -> {
 
-                val info = fetchRequestInfo(guild.idLong, id)
+                val info = fetchRequestInfo(id)
                     ?: return event.error("Request doesn't exists")
 
                 val modal = when (method) {

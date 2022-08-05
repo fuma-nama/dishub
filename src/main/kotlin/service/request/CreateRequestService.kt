@@ -46,7 +46,7 @@ class CreateRequestService(val guild: Guild): Service {
         }
     }
 
-    suspend fun createThread(containerId: Long) = coroutineScope {
+    private suspend fun createThread(containerId: Long) = coroutineScope {
         val container = guild.getCategoryById(containerId)
         val action = guild.createTextChannel("empty", container)
             .addPermissionOverride(guild.publicRole, NO_PERMISSIONS, ALL_PERMISSIONS)
@@ -62,7 +62,7 @@ class CreateRequestService(val guild: Guild): Service {
     }
 
     private fun initThread(request: Int, owner: Long, config: GuildRecord): RestAction<*> {
-        addSubscriber(owner, guild.idLong, request)
+        addSubscriber(owner, request)
 
         return thread.manager.apply {
             setName("request-$request")

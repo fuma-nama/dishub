@@ -115,7 +115,7 @@ private val Item = { (request, info): Record2<RequestRecord, RequestInfoRecord> 
         fields = listOf(
             field(
                 name = "ID",
-                value = request.id.toString(),
+                value = request.displayId.toString(),
                 inline = true
             ),
 
