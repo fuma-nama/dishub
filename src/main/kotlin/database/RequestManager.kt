@@ -23,7 +23,7 @@ WHERE "orderId"=3)
 fun addRequest(guild: Long, owner: Long, thread: Long, message: Long): RequestRecord? {
     with (REQUEST) {
 
-        val nextDisplayId = select(coalesce(max(DISPLAY_ID)).plus(1))
+        val nextDisplayId = select(coalesce(max(DISPLAY_ID), `val`(0)).plus(1))
             .from(this)
             .where(GUILD.eq(guild))
 
